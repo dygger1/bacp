@@ -2,7 +2,6 @@
 
 # Seguro Backup Script
 # --------------------
-# 
 
 # Keeps a small data file of user settings
 # Makes simple copies of selected data to defined device
@@ -25,25 +24,188 @@ MainMenu() {
   do
     dialog --backtitle "$Backtitle" --title " Feliz Backup Utility " --no-shadow --ok-button "Select" --cancel-button "Quit" --menu "\nWelcome to the Feliz Backup Utility\n" 15 40 2 \
     "Settings" "View and change" \
-    "Run" "Choose and run" 2> output.file
+    "Run" "Choose and run" 2> seguro.output
     if [ $? -gt 0 ]; then # 'Quit' selected
       exit
     else
-      Selected=`cat output.file`
+      Selected=`cat seguro.output`
     fi
     case $Selected in
     "Settings") OpenDataFile    # Open existing file and extract data to arrays
           DisplayDataFile       # Display settings and confirm or change any details
      ;; 
     *) # RunBackups
+      BackupCheckList
+      ActionBackup
     esac
   done
-
 }
+
 #
-# Listgen
+# Data file handling
 #
-listgen1() {
+
+CheckDataFile() {  # First check if data file exists
+while [ ! -f `pwd`/seguro.data ]
+do
+  CreateDataFile
+done
+while [ -z $seguro.data ]  # In case it is empty
+do
+  CreateDataFile
+done
+}
+
+CreateDataFile() { # If this is first time, data file does not exist or is empty.
+  NewDataFile="Yes"
+  Exit="No"
+  until [ $Exit = "Yes" ]
+  do
+    # Inform user
+    dialog --title " - First - " --clear --msgbox "This appears to be the first time Seguro has run on this machine. Before you can make any backups, you will have to set a destination device and at least one source." 10 45
+    ChooseDestination # Choose destination device
+  done
+}
+
+ChooseDestination() { # Create a list of available devices
+  Exit="No"
+  UserName=`whoami`
+  External=`ls /media/$UserName/`
+  Local=`ls ~/`
+  All="$External Local_drive"
+  Message="Choose a destination device for your backups. Make sure that the device is turned on."
+  until [ $Exit = "Yes" ]
+  do
+    listgen1 "$All" " Destination " ""
+    if [ $? -gt 0 ]; then
+      Exit="Yes"
+    else
+      Selection=`cat seguro.output`
+      case $Selection in
+      "Local_drive") StartPath="/home/$UserName" ;;
+      *) StartPath="$Selection"
+      esac
+      dialog --title " - Destination - " --clear --yes-button "$StartPath" --no-button "Deeper" --yesno "Seguro will create a dated folder in your chosen destination for each backup. Use device '$StartPath' or select an existing directory?" 10 45
+      case $? in
+      0) Destination="$StartPath" # ie: Yes - finish with selected $StartPath
+        Exit="Yes"
+        ;;
+      *) # ie: No (Existing directory) - offer directories until done
+        if [ $Selection = "Local_drive" ]; then
+          All=`ls $StartPath`
+        else
+          All=`ls /media/$UserName/${StartPath}`
+        fi
+      esac
+    fi
+    # Save filepath output and check it
+    DestinationPath="$All"
+    if [ $NewDataFile="Yes" ]; then
+      # Create new data file and save destination
+      echo "Destination/$StartPath/" > seguro.data
+    else
+      # Replace existing Destination with new one
+      sed -i "/Destination/ c\'Destination/$StartPath/'" seguro.data
+      # Check this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    fi
+    SaveTo="$Destination/${Today}/"
+    Exit="Yes"
+  done
+}
+
+AddSource() { # (unwritten function)
+  echo
+  # Add a new source
+  # Save to seguro.data
+}
+
+EditSource() { # (unwritten function)
+  echo
+  # Edit or delete an existing source
+  # Save to seguro.data
+}
+
+OpenDataFile() { # Extract records from existing file into arrays
+  # Count number of lines
+  HowMany=`cat -n seguro.data | awk '{print $1}' | tail -c -2`
+  # Copy each line into array. Line consists of a label and a filepath
+  # There are no spaces between the label and path
+  declare -a ItemsArray
+  Count=1
+  until [ $Count -gt $HowMany ]; do
+    ItemsArray[${Count}]=`sed -n "$Count p" seguro.data`
+    Count=$((Count+1))
+  done 
+  # Separate labels from filepaths
+  ListofPaths="" # String array to pass list of filepaths to listgen2
+  for ((Count=1;Count<=$HowMany;Count++))
+    {
+    # 1) Label
+    Label=`echo ${ItemsArray[${Count}]} | cut -d / -f 1`
+    LabelArray[${Count}]="$Label"
+    LengthOfLabel=${#Label}
+    LengthOfLabel=$(( LengthOfLabel +1 ))
+    # 2) Path
+    FilePath=`echo ${ItemsArray[${Count}]} | cut -c ${LengthOfLabel}-`
+    PathArray[${Count}]="$FilePath"
+    ListofPaths="$ListofPaths $FilePath" # For menu display
+    }
+}
+
+DisplayDataFile() {  # Display existing settings and add, delete or change any details
+  Exit="No"
+  until [ $Exit = "Yes" ]
+  do
+    # Call menu dialog to display all items - a) Destination; b) Sources
+    Message="\nHere are all your current backup settings ...\nPlease <Select> one to edit/delete, or <Cancel> to quit or <Add> to add a new source"
+    listgen2 "$ListofPaths" " - Current Settings - " "add" "LabelArray"
+    case $? in
+    1) Exit="Yes" # ie: Cancel button selected (no action)
+      continue
+      ;;
+    2) AddSource # ie: Help button selected (add a source path)
+      ;;
+    *) SelectedPath=$(cat seguro.output) # ie: Ok/Edit button selected - item to be edited or deleted
+      Counter=1
+      for i in $ListofPaths[@]; do # Match filepath output from dialog with its counterpart in LabelArray
+        if [ $i = $SelectedPath ]; then
+          SelectedLabel="${LabelArray[${Counter}]}"
+          break
+        fi
+      done
+      # Appropriate action dialog
+      if [ $SelectedLabel = "Destination" ]; then
+        # Special action dialog for Destination - only allows change
+        NewDataFile="No"
+        ChooseDestination
+      else # ie: This is a source
+        DeleteSource # Confirm delete this source
+      fi
+    esac
+  done
+}
+
+BackupCheckList() { # (unwritten function)
+  # Display a list of existing source paths (selected as previous backup)
+  # User can check/uncheck items before proceeding to run backup
+  echo # (placeholder for empty function)
+}
+
+ActionBackup() { # (unwritten function)
+  echo
+  # Parse through list of selections, copying sources to destination
+}
+
+DeleteSource() { # (unwritten function)
+  # First confirm delete
+  # Then delete it
+  echo # (placeholder for empty function)
+}
+
+#
+# Listgen functions
+#
+listgen1() { # Prepare single-column list
   local Backtitle="$Passed"
   local Title="$2"
   if [ $3 ]; then
@@ -72,15 +234,18 @@ listgen1() {
       Width=$((Length+20))
     fi
   done
+  NoTag="--no-tag"
   Printit
 }
 
-listgen2() { 
+listgen2() { # Prepare dual-column list
   local Backtitle="$Passed"
   local Title="$2"
   if [ $3 ]; then
     case $3 in
       "nocancel") CancelButton="--nocancel"
+      ;;
+      "add") CancelButton="--help-button --help-label Add"
       ;;
       *) CancelButton="--cancel-label $3"
     esac
@@ -98,7 +263,9 @@ listgen2() {
   # Import the complex array
   name=$4[@]
   LongName=("${!name}")
-  Width=50
+  if [ ! $Width ]; then
+    Width=50
+  fi
   # Prepare $1 and $4 for dialog menu
   for item in "${LongName[@]}"; do
     Options[$((Counter))]="${Items[${ItemCounter}]}"
@@ -107,115 +274,31 @@ listgen2() {
     ItemCounter=$((ItemCounter+1))
     Length=`echo ${#item}`
     if [ $Length -gt $Width ]; then
-      Width=$((Length+50))
+      Width=$((Length+30))
     fi
   done
+  NoTag=""
   Printit # The final frontier
 }
 
-Printit() {
+Printit() { # Display the list prepared in listgen1 or listgen2
   Counter=$((Counter/2))
   # Calculate number of lines
-  echo $Message > output.file
-  countcharacters=`cat output.file | wc -c`  # Count number of characters in $Message
+  echo $Message > seguro.output
+  countcharacters=`cat seguro.output | wc -c`  # Count number of characters in $Message
   countlines=$((countcharacters/Width)) # Calculate lines
-  echo $Message | sed 's/[^\\]//g' > output.file   # Use sed to remove all except newlines
-  countnewlines=`cat output.file | wc -c` # Count newline characters
-  Height=$((countlines+countnewlines+16))
-  if [ $Height -gt 30 ]; then
-    Height=30
-  fi
-  if [ $Width -lt 75 ]; then
-    Width=$((Width+25))
+  echo $Message | sed 's/[^\\]//g' > seguro.output   # Use sed to remove all except newlines
+  countnewlines=`cat seguro.output | wc -c` # Count newline characters
+  Height=$((countlines+countnewlines+Counter+16-Counter))
+  if [ $Height -gt 19 ]; then
+    Height=19
+    if [ $Width -lt 50 ]; then
+      Width=$((Width+10))
+    fi
   fi
   # Use $Counter and ${Options[@]} array in dialog
-  dialog --backtitle "$Backtitle" --title " $Title " --no-shadow --ok-button "Select" $CancelButton --menu "$Message\n" $Height $Width $Counter "${Options[@]}" 2> output.file
-}
-
-#
-# Data file handling
-#
-
-CheckDataFile() {  # First check if data file exists
-while [[ ! -f `pwd`/backup.data ]]
-do # Data file is not present
-  CreateDataFile
-done
-}
-
-CreateDataFile() {
-  dialog --title " - First - " --clear --msgbox "This appears to be the first time Seguro has run on this machine. Before you can make any backups, you will have to set a destination device and at least one source." 10 45
-  # 1) Choose destination device
-  dialog --title " - First - " --clear --msgbox "First choose a destination device for your backups, using the file selection screen that follows. Make sure that the device is turned on, then find it by browsing the file-system, or by typing its path in the pathbar. You will be able to switch between windows and controls using Tab, select an item with the Space-bar, and open a selected directory by typing a '/' in the pathbar. Finally you will be able to save your selection by pressing [Enter]" 16 50
-  UserName=`whoami`
-dialog --no-shadow --title "Please choose a file" --ok-button "Save" --no-cancel --fselect /media/$UserName/ 14 48 2> output.file
-  
-  
-  # 2) Choose source devices
-  # 3 Save all to backup.data
-}
-
-OpenDataFile() { # Extract records from existing file into arrays
-  # Count number of lines
-  HowMany=`cat -n backup.data | awk '{print $1}' | tail -c -2`
-  # Copy each line into array. Line consists of a label and a filepath
-  # There are no spaces between the label and path
-  declare -a ItemsArray
-  Count=1
-  until [ $Count -gt $HowMany ]; do
-    ItemsArray[${Count}]=`sed -n "$Count p" backup.data`
-    Count=$((Count+1))
-  done 
-  # Separate labels from filepaths
-
-  ListofPaths="" # String array to pass list of filepaths to listgen2
-  for ((Count=1;Count<=$HowMany;Count++))
-    {
-    # 1) Label
-    Label=`echo ${ItemsArray[${Count}]} | cut -d / -f 1`
-    LabelArray[${Count}]="$Label"
-    LengthOfLabel=${#Label}
-    LengthOfLabel=$(( LengthOfLabel +1 ))
-    # 2) Path
-    FilePath=`echo ${ItemsArray[${Count}]} | cut -c ${LengthOfLabel}-`
-    PathArray[${Count}]="$FilePath"
-    ListofPaths="$ListofPaths $FilePath" # For menu display
-    }
-}
-
-DisplayDataFile() {  # Display existing settings and confirm or change any details
-  # 1) Call menu dialog to display all items - a) Destination; b) Sources
-  Message="\nHere are all your current backup settings ...\nPlease choose one to edit, or <Cancel> to quit"
-  listgen2 "$ListofPaths" " - Current Settings - " "" "LabelArray"
-  if [ $? -ne 0 ]; then # Cancel selected
-    SelectedLabel=""
-  else
-    # Save filepath output from dialog and match with its counterpart in LabelArray
-    SelectedPath=$(cat output.file)
-    Counter=1
-    for i in $ListofPaths[@]; do
-      if [ $i = $SelectedPath ]; then
-        SelectedLabel="${LabelArray[${Counter}]}"
-        break
-      fi
-    done
-  fi
-  # 2) Display appropriate action dialog
-  case $SelectedLabel in
-  "Destination") echo "$SelectedPath $SelectedLabel"
-    
-    # 3) Special action dialog for Destination - only allows change or keep
-    SelectedPath=`dialog --stdout --title "Please choose a file" --fselect $HOME/ 14 48`
-    case $? in
-      0) echo "\"$SelectedPath\" chosen";;
-      1) echo "Cancel pressed.";;
-      255) echo "Box closed.";;
-      *) echo
-    esac
-  ;;
-  *) # 3) For sources there are three options for each element: keep, change, delete
-       dialog --backtitle "$Backtitle" --title " $Title " --no-shadow --ok-button "Select" --hfile help.file --menu "\nKeep, change or delete the selected source?\n" $Height $Width $Counter "Change Delete" 2> output.file
-  esac
+  dialog --backtitle "$Backtitle" --title " $Title " --no-shadow --ok-button "Select" $CancelButton \
+      --menu "$Message\n" $Height $Width $Counter "${Options[@]}" 2> seguro.output
 }
 
 #
@@ -280,4 +363,4 @@ CheckDataFile # First check if data file exists, and if not create it
 # Let's have a main menu in this one!!!
 MainMenu
 
-rm output.file
+rm seguro.output
