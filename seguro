@@ -185,15 +185,87 @@ DisplayDataFile() {  # Display existing settings and add, delete or change any d
   done
 }
 
-BackupCheckList() { # (unwritten function)
-  # Display a list of existing source paths (selected as previous backup)
+BackupCheckList() { # A dialog checklist of saved sources.
   # User can check/uncheck items before proceeding to run backup
-  echo # (placeholder for empty function)
+  OpenDataFile # 1) Rebuild list of names to be sure it's up-to-date
+  # Prepare for display
+  local Counter=1
+  LineCounter=0
+  declare -a Options
+  # Prepare Options array for dialog checklist
+  until [ $LineCounter -eq $HowMany ]
+  do
+    LineCounter=$((LineCounter+1))
+    if [ "${LabelArray[${LineCounter}]}" != "Destination" ]; then
+      Options[${Counter}]="${LabelArray[${LineCounter}]}"
+      Counter=$((Counter+1))
+      Options[${Counter}]=" "
+      Counter=$((Counter+1))
+      Options[${Counter}]="on"
+      Counter=$((Counter+1))
+    fi
+  done
+  # User selects from checklist
+  dialog --backtitle " - Seguro Backup - " --title " - Run backup - " --separate-output --checklist "Select which items to backup using this list.\nPress SPACE to toggle an item on/off" 20 61 5 \
+        "${Options[@]}" \
+        2> seguro.output
+  Precheck # Checks that destination is ready
 }
 
-ActionBackup() { # (unwritten function)
-  echo
-  # Parse through list of selections, copying sources to destination
+Precheck() { # Check that destination is switched on before starting action
+  Exit="No"
+  until [ $Exit = "Yes" ]
+  do
+    Destination=`cat seguro.data | awk '{print $1}' | cut -c 12-`
+    Target=`ls $Destination` # Check that it is turned on
+    if [ -n "$Target" ]; then
+      Today=`date +%F`       # Today's date
+      Target1=`ls $Destination | grep ${Today}` # Check for existing backup
+      if [ -z "$Target1" ]; then
+        mkdir $Destination$Today
+      fi
+    else
+      while [ -z "$Target" ]
+      do
+        dialog --title " - Not ready - " --clear --yesno "The destination device appears to be turned off. Please turn it on, then select <Ok> to try again." 10 45
+        if [ $? -eq 0 ]; then
+          Target=`ls $Destination`
+        else
+          Exit="Yes"
+          break
+        fi
+      done
+    fi
+    if [ $Exit != "Yes" ]; then
+      ActionBackup
+      Exit="Yes"
+    fi
+  done
+}
+
+ActionBackup() { # Retrieve items and copy sources to destination
+  clear
+  HowMany=`cat -n seguro.output | awk '{print $1}' | tail -c -2`
+# Go through the list of selected items, checking label against $LabelArray
+# and getting record number to retrieve path from $PathArray
+  Counter=1
+  until [ $Counter -gt $HowMany ]
+  do  
+    item=`cat -n seguro.output | grep $Counter | cut -c 8-`
+    Count=1 
+    until [ $Count -eq $HowMany ]
+    do
+      Retrieve=$((Count+1)) # Use item number in the arrays, ignoring Destination
+      if [ "${LabelArray[${Retrieve}]}" = "$item" ]; then # Item matches $LabelArray
+        # Find same number in PathArray
+        ItemPath=${PathArray[${Retrieve}]}
+        cp -r $ItemPath $Destination$Today/
+        break
+      fi
+      Count=$((Count+1))
+    done
+    Counter=$((Counter+1))
+  done
 }
 
 DeleteSource() { # (unwritten function)
