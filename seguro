@@ -31,12 +31,11 @@ MainMenu() {
       Selected=`cat seguro.output`
     fi
     case $Selected in
-    "Settings") OpenDataFile    # Open existing file and extract data to arrays
-          DisplayDataFile       # Display settings and confirm or change any details
+    "Settings") OpenDataFile    # Open existing file and extract data to arrays (134)
+          DisplayDataFile       # Display settings and enable change any details (162)
      ;; 
-    *) # RunBackups
-      BackupCheckList
-      ActionBackup
+    *) BackupCheckList # Display sources checklist ()
+      Precheck # Checks that destination is ready before calling ActionBackup ()
     esac
   done
 }
@@ -64,16 +63,17 @@ CreateDataFile() { # If this is first time, data file does not exist or is empty
     # Inform user
     dialog --title " - First - " --clear --msgbox "This appears to be the first time Seguro has run on this machine. Before you can make any backups, you will have to set a destination device and at least one source." 10 45
     ChooseDestination # Choose destination device
+    AddSource # Add a source path and label
   done
 }
 
 ChooseDestination() { # Create a list of available devices
-  Exit="No"
   UserName=`whoami`
   External=`ls /media/$UserName/`
   Local=`ls ~/`
   All="$External Local_drive"
   Message="Choose a destination device for your backups. Make sure that the device is turned on."
+  Exit="No"
   until [ $Exit = "Yes" ]
   do
     listgen1 "$All" " Destination " ""
@@ -113,19 +113,93 @@ ChooseDestination() { # Create a list of available devices
   done
 }
 
-AddSource() { # (unwritten function)
-  echo
-  # Add a new source
-  # Save to seguro.data
+AddSource() { # Create a new source path
+  UserName=`whoami`
+  Local=`ls ~/`
+  StartPath="/home/$UserName/"
+    Message="Choose a file or folder to add to your data file."
+  FirstLevel="Yes"
+  Exit="No"
+  until [ $Exit = "Yes" ]
+  do
+    listgen1 "$Local" " - Sources - " ""
+    RetVal=$?
+    if [ $RetVal -gt 0 ] && [ $FirstLevel = "Yes" ]; then # Cancel selected on first level
+      Exit="Yes"
+    elif [ $RetVal -gt 0 ]; then # Cancel selected on subsequent level
+      FirstLevel="No" # Return to previous level
+    else
+      Selection=`cat seguro.output`
+      Path="$StartPath$Selection"
+      StartPath="$Path/"
+      dialog --title " - Sources - " --clear --yes-button "Save" --extra-button --extra-label "Deeper" --yesno "Save '$Path' to your sources paths, or open it to go deeper? Choose <Cancel> if you wish to do nothing." 10 45
+      case $? in
+      0) SelectedPath="$Path"
+        Message="Enter a short name for this source\n(up to three or four words is best, preferably not more)"
+        EditLabel # Enter a label to $SelectedLabel
+        if [ -n "$SelectedLabel" ]; then
+          # Save new record
+          echo "$SelectedLabel$SelectedPath/" >> seguro.data
+          Exit="Yes"
+        fi
+        ;;
+      3) Local=`ls $Path` # Offer directories until done
+        ;;
+      *) SelectedPath=""
+        Exit="Yes"
+      esac
+    fi
+  done
 }
 
-EditSource() { # (unwritten function)
-  echo
-  # Edit or delete an existing source
-  # Save to seguro.data
+EditOrDelete() {   # yes/no dialog with options to <Edit> or <Delete> using $SelectedPath & $SelectedLabel
+  dialog --title " - Edit or Delete - " --clear --yes-button "Edit" --extra-button --extra-label "Delete" --no-button "Cancel" --yesno "Selected source path is '$SelectedPath $SelectedLabel'\n Edit the label, or delete this record?" 10 45
+  Action=$?
+  case $Action in
+  0) EditSource
+  ;;
+  3) DeleteSource
+  ;;
+  *) return # Cancel
+  esac
+}
+
+EditLabel() { # Form to edit an existing or new label
+  # Returns $SelectedLabel if completed
+  dialog --title " - Sources - " --inputbox "$Message" 16 51 2> seguro.output
+  RetVal=$?
+  case $RetVal in
+  0) SelectedLabel=`cat seguro.output` # 
+  ;;
+  *) SelectedLabel=""
+  esac
+}
+
+EditSource() {  # Edit the label of an existing source using $SelectedPath & $SelectedLabel
+  # Called via EditOrDelete from DisplayDataFile
+  Message="This source is currently labelled '$SelectedLabel'\nEnter a new short name for this source (up to three or four words is best, preferably not more) or <Cancel> to leave it as it is"
+  EditLabel # Re-sets $SelectedLabel
+  # Then assemble the new label with the path, and replace the record
+  Replacement="$SelectedLabel$SelectedPath"
+  # Get record number of selected item
+  ReadRecord=`cat -n seguro.data | grep ${SelectedPath}$ | awk '{print $1}'`
+  # Replace the selected record number with new one
+  sed -i "$ReadRecord d" seguro.data # Delete existing record
+  echo "$Replacement" >> seguro.data # Append new on
+}
+
+DeleteSource() {  # Delete an existing source using $SelectedPath & $SelectedLabel
+  # Called via EditOrDelete from DisplayDataFile
+  # Get record number of selected item
+  ReadRecord=`cat -n seguro.data | grep ${SelectedPath}$ | awk '{print $1}'`
+  # First confirm delete
+  dialog --title " - Confirm - " --yesno "Are you sure you want to delete this record?" 10 45
+  # Then delete it
+  sed -i "$ReadRecord d" seguro.data # Delete existing record
 }
 
 OpenDataFile() { # Extract records from existing file into arrays
+  # Called by almost all routines
   # Count number of lines
   HowMany=`cat -n seguro.data | awk '{print $1}' | tail -c -2`
   # Copy each line into array. Line consists of a label and a filepath
@@ -157,121 +231,32 @@ DisplayDataFile() {  # Display existing settings and add, delete or change any d
   until [ $Exit = "Yes" ]
   do
     # Call menu dialog to display all items - a) Destination; b) Sources
-    Message="\nHere are all your current backup settings ...\nPlease <Select> one to edit/delete, or <Cancel> to quit or <Add> to add a new source"
+    Message="\nHere are all your current backup settings ...\nYou can <Select> one to edit or delete, or you can <Cancel> to quit or <Add> to add a new source."
     listgen2 "$ListofPaths" " - Current Settings - " "add" "LabelArray"
     case $? in
     1) Exit="Yes" # ie: Cancel button selected (no action)
       continue
       ;;
-    2) AddSource # ie: Help button selected (add a source path)
+    2) AddSource # ie: Help button selected (add a source path) ()
       ;;
     *) SelectedPath=$(cat seguro.output) # ie: Ok/Edit button selected - item to be edited or deleted
-      Counter=1
+      Counter=1                    # Prepare to edit or delete
       for i in $ListofPaths[@]; do # Match filepath output from dialog with its counterpart in LabelArray
         if [ $i = $SelectedPath ]; then
           SelectedLabel="${LabelArray[${Counter}]}"
-          break
+          break                    # Record retrieved, so move on
         fi
       done
       # Appropriate action dialog
       if [ $SelectedLabel = "Destination" ]; then
         # Special action dialog for Destination - only allows change
         NewDataFile="No"
-        ChooseDestination
+        ChooseDestination # (69)
       else # ie: This is a source
-        DeleteSource # Confirm delete this source
+        EditOrDelete # Pass this record to decision dialog using $SelectedPath & $SelectedLabel
       fi
     esac
   done
-}
-
-BackupCheckList() { # A dialog checklist of saved sources.
-  # User can check/uncheck items before proceeding to run backup
-  OpenDataFile # 1) Rebuild list of names to be sure it's up-to-date
-  # Prepare for display
-  local Counter=1
-  LineCounter=0
-  declare -a Options
-  # Prepare Options array for dialog checklist
-  until [ $LineCounter -eq $HowMany ]
-  do
-    LineCounter=$((LineCounter+1))
-    if [ "${LabelArray[${LineCounter}]}" != "Destination" ]; then
-      Options[${Counter}]="${LabelArray[${LineCounter}]}"
-      Counter=$((Counter+1))
-      Options[${Counter}]=" "
-      Counter=$((Counter+1))
-      Options[${Counter}]="on"
-      Counter=$((Counter+1))
-    fi
-  done
-  # User selects from checklist
-  dialog --backtitle " - Seguro Backup - " --title " - Run backup - " --separate-output --checklist "Select which items to backup using this list.\nPress SPACE to toggle an item on/off" 20 61 5 \
-        "${Options[@]}" \
-        2> seguro.output
-  Precheck # Checks that destination is ready
-}
-
-Precheck() { # Check that destination is switched on before starting action
-  Exit="No"
-  until [ $Exit = "Yes" ]
-  do
-    Destination=`cat seguro.data | awk '{print $1}' | cut -c 12-`
-    Target=`ls $Destination` # Check that it is turned on
-    if [ -n "$Target" ]; then
-      Today=`date +%F`       # Today's date
-      Target1=`ls $Destination | grep ${Today}` # Check for existing backup
-      if [ -z "$Target1" ]; then
-        mkdir $Destination$Today
-      fi
-    else
-      while [ -z "$Target" ]
-      do
-        dialog --title " - Not ready - " --clear --yesno "The destination device appears to be turned off. Please turn it on, then select <Ok> to try again." 10 45
-        if [ $? -eq 0 ]; then
-          Target=`ls $Destination`
-        else
-          Exit="Yes"
-          break
-        fi
-      done
-    fi
-    if [ $Exit != "Yes" ]; then
-      ActionBackup
-      Exit="Yes"
-    fi
-  done
-}
-
-ActionBackup() { # Retrieve items and copy sources to destination
-  clear
-  HowMany=`cat -n seguro.output | awk '{print $1}' | tail -c -2`
-# Go through the list of selected items, checking label against $LabelArray
-# and getting record number to retrieve path from $PathArray
-  Counter=1
-  until [ $Counter -gt $HowMany ]
-  do  
-    item=`cat -n seguro.output | grep $Counter | cut -c 8-`
-    Count=1 
-    until [ $Count -eq $HowMany ]
-    do
-      Retrieve=$((Count+1)) # Use item number in the arrays, ignoring Destination
-      if [ "${LabelArray[${Retrieve}]}" = "$item" ]; then # Item matches $LabelArray
-        # Find same number in PathArray
-        ItemPath=${PathArray[${Retrieve}]}
-        cp -r $ItemPath $Destination$Today/
-        break
-      fi
-      Count=$((Count+1))
-    done
-    Counter=$((Counter+1))
-  done
-}
-
-DeleteSource() { # (unwritten function)
-  # First confirm delete
-  # Then delete it
-  echo # (placeholder for empty function)
 }
 
 #
@@ -377,6 +362,68 @@ Printit() { # Display the list prepared in listgen1 or listgen2
 # Operational
 #
 
+BackupCheckList() { # A dialog checklist of saved sources.
+  # User can check/uncheck items before proceeding to run backup
+  OpenDataFile # 1) Rebuild list of names to be sure it's up-to-date
+  # Prepare for display
+  local Counter=1
+  LineCounter=0
+  declare -a Options
+  # Prepare Options array for dialog checklist
+  until [ $LineCounter -eq $HowMany ]
+  do
+    LineCounter=$((LineCounter+1))
+    if [ "${LabelArray[${LineCounter}]}" != "Destination" ]; then
+      Options[${Counter}]="${LabelArray[${LineCounter}]}"
+      Counter=$((Counter+1))
+      Options[${Counter}]=" "
+      Counter=$((Counter+1))
+      Options[${Counter}]="on"
+      Counter=$((Counter+1))
+    fi
+  done
+  # User selects from checklist
+  dialog --backtitle " - Seguro Backup - " --title " - Run backup - " --separate-output --checklist "Select which items to backup using this list.\nPress SPACE to toggle an item on/off" 20 61 5 \
+        "${Options[@]}" \
+        2> seguro.output
+}
+
+Precheck() { # Check that destination is switched on before starting action
+  Exit="No"
+  Target="No"
+  until [ $Exit = "Yes" ]
+  do
+    TestDestination
+    if [ $Target = "Yes" ]; then
+      ActionBackup
+      Exit="Yes"
+    fi
+  done
+}
+
+ActionBackup() { # Retrieve items and copy sources to destination
+  HowMany=`cat -n seguro.output | awk '{print $1}' | tail -c -2`
+  # Go through the list of selected items, checking label against $LabelArray
+  # and getting record number to retrieve path from $PathArray
+  Counter=1
+  until [ $Counter -gt $HowMany ]
+  do  
+    item=`cat -n seguro.output | grep $Counter | cut -c 8-`
+    Count=1 
+    until [ $Count -eq $HowMany ]
+    do
+      Retrieve=$((Count+1)) # Use item number in the arrays, ignoring Destination
+      if [ "${LabelArray[${Retrieve}]}" = "$item" ]; then # Item matches $LabelArray
+        ItemPath=${PathArray[${Retrieve}]}                # Find same number in PathArray
+        cp -r $ItemPath $Destination$Today/
+        break
+      fi
+      Count=$((Count+1))
+    done
+    Counter=$((Counter+1))
+  done
+}
+
 CheckTarget() { # Checks in case target folder and files already exists
   if [ ! -d "$saveto" ]; then
     mkdir "${saveto}"
@@ -393,37 +440,31 @@ CheckTarget() { # Checks in case target folder and files already exists
   fi 
 }
 
-TestDestination() { # Tests before backup
-Target=`ls $Destination` # Check that Destination exists and is turned on
-if [ -n "$Target" ]; then
-  Today=`date +%F`       # Today's date
-  Target1=`ls $Destination | grep ${Today}` # Check for existing backup
-  if [ -z "$Target1" ]; then
-    echo "Making target directory $Target1"
-  #  mkdir $Destination/$Today
-  else
-    echo "Target $Target1 not created as already exists"
-  fi
-else
-  while [ -z "$Target" ]
+TestDestination() { # Checks that destination device is available
+  Exit="No"
+  until [ $Exit = "Yes" ]
   do
-    read -p "Turn on the backup disks. Press [Enter] when ready."
-    Target=`ls $Destination`
+    Destination=`cat seguro.data | awk '{print $1}' | cut -c 12-`
+    Target=`ls $Destination` # Check that it is turned on
+    if [ -n "$Target" ]; then
+      Today=`date +%F`       # Today's date
+      Target1=`ls $Destination | grep ${Today}` # Check for existing backup
+      if [ -z "$Target1" ]; then
+        mkdir $Destination$Today # Make dated directory on destination device
+      fi
+    else
+      while [ -z "$Target" ] # Destination is not available
+      do
+        dialog --title " - Not ready - " --clear --yesno "The destination device appears to be turned off. Please turn it on. Try again?" 10 45
+        if [ $? -eq 0 ]; then
+          Target=`ls $Destination` # Try again
+        else
+          Target="Yes"
+          break # Exit this function
+        fi
+      done
+    fi
   done
-fi
-}
-
-SourcesChecklist() {
-  echo
-  # Display sources for user to select those to run
-  # Display only names, but output FilePath
-}
-
-RunBackups() { # User initiates backups by selecting from checklist
-  # First check to make sure data file exists and has minimum of Destination and one Source
-  SourcesChecklist # 
-  TestDestination # Check and prepare dated folder on target device
-  # Run all selected backups (using only FilePath
 }
 
 #
