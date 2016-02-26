@@ -3,9 +3,9 @@
 # Seguro Backup Script
 # --------------------
 
-# Keeps a small data file of user settings
-# Makes simple copies of selected data to defined device
-# into a folder it creates, called by the day's date
+# Keeps a small data file of user settings. Creates a folder
+# on the defined destination device, called by the day's date,
+# and makes simple copies of selected data into that folder.
 
 #
 # Variables
@@ -25,8 +25,13 @@ MainMenu() {
     dialog --backtitle "$Backtitle" --title " Feliz Backup Utility " --no-shadow --ok-button "Select" --cancel-button "Quit" --menu "\nWelcome to the Feliz Backup Utility\n" 15 40 2 \
     "Settings" "View and change" \
     "Run" "Choose and run" 2> seguro.output
+<<<<<<< HEAD
     if [ $? -gt 0 ]; then # 'Quit' selected
       rm seguro.output
+=======
+    RetVal=$?
+    if [ $RetVal -gt 0 ]; then # 'Quit' selected
+>>>>>>> ace5695c6617be9acd4e32376541d57a89df07cb
       exit
     else
       Selected=`cat seguro.output`
@@ -36,13 +41,19 @@ MainMenu() {
           DisplayDataFile       # Display settings and enable change any details
      ;; 
     *) BackupCheckList # Display sources checklist ()
+<<<<<<< HEAD
       if [ $Exit = "Yes" ]; then
         Exit="No"
       else
         Precheck # Checks that destination is ready before calling ActionBackup ()
         Exit="No"
+=======
+      if [ $Exit = "No" ]; then
+        Precheck # Checks that destination is ready before calling ActionBackup ()
+>>>>>>> ace5695c6617be9acd4e32376541d57a89df07cb
       fi
     esac
+    Exit="No"
   done
 }
 
@@ -72,9 +83,15 @@ DestinationPath() { # Choose destination device
   Exit="No"
   until [ $Exit = "Yes" ]
   do
+<<<<<<< HEAD
     listgen1 "External Local" " Destination " "" # Present list of all devices
     RetVal=$?
     if [ $RetVal -gt 0 ]; then # Test for <Cancel>
+=======
+    listgen1 "$All" " Destination " ""
+    RetVal=$?
+    if [ $RetVal -gt 0 ]; then
+>>>>>>> ace5695c6617be9acd4e32376541d57a89df07cb
       Exit="Yes"
       break
     else # Here the user has chosen only whether to use an external device or a local one
@@ -402,6 +419,7 @@ BackupCheckList() { # A dialog checklist of saved sources.
       Counter=$((Counter+1))
     fi
   done
+<<<<<<< HEAD
   # User selects from checklist
   dialog --backtitle " - Seguro Backup - " --title " - Run backup - " --separate-output --checklist "Select which items to backup using this list.\nPress SPACE to toggle an item on/off" 20 61 5 \
         "${Options[@]}" \
@@ -410,10 +428,40 @@ BackupCheckList() { # A dialog checklist of saved sources.
   if [ $RetVal -gt 0 ]; then      
     Exit="Yes"
   fi
+=======
+  while [ $Exit = "No" ]
+  do
+    # User selects from checklist
+    dialog --backtitle " - Seguro Backup - " --title " - Run backup - " --separate-output --checklist "Select which items to backup using this list.\nPress SPACE to toggle an item on/off" 20 61 5 "${Options[@]}" 2> seguro.output
+    RetVal=$?
+    if [ $RetVal -gt 0 ]; then
+      Exit="Yes"
+    else
+      Selection=`cat seguro.output`
+      case $Selection in
+        "Local_drive") StartPath="/home/$UserName"
+        ;;
+        *) StartPath="$Selection"
+      esac
+      dialog --title " - Destination - " --clear --yes-button "$StartPath" --no-button "Deeper" --yesno "Seguro will create a dated folder in your chosen destination for each backup. Use device '$StartPath' or select an existing directory?" 10 45
+      RetVal=$?
+      case $RetVal in
+        0) Destination="$StartPath" # ie: Yes - finish with selected $StartPath
+          ;;
+        *) # ie: No (Existing directory) - offer directories until done
+          if [ $Selection = "Local_drive" ]; then
+            All=`ls $StartPath`
+          else
+            All=`ls /media/$UserName/${StartPath}`
+          fi
+      esac
+      break
+    fi
+  done
+>>>>>>> ace5695c6617be9acd4e32376541d57a89df07cb
 }
 
 Precheck() { # Check that destination is switched on before starting action
-  Exit="No"
   Target="No"
   until [ $Exit = "Yes" ]
   do
@@ -465,7 +513,6 @@ CheckTarget() { # Checks in case target folder and files already exists
 }
 
 TestDestination() { # Checks that destination device is available
-  Exit="No"
   until [ $Exit = "Yes" ]
   do
     Destination=`cat seguro.data | awk '{print $1}' | cut -c 12-`
@@ -480,12 +527,17 @@ TestDestination() { # Checks that destination device is available
       while [ -z "$Target" ] # Destination is not available
       do
         dialog --title " - Not ready - " --clear --yesno "The destination device appears to be turned off. Please turn it on. Try again?" 10 45
-        if [ $? -eq 0 ]; then
+        RetVal=$?
+        if [ $RetVal -eq 0 ]; then
           Target=`ls $Destination` # Try again
         else
           Target="Yes"
+<<<<<<< HEAD
           Exit="Yes"
           break # Quit this function
+=======
+          Exit="Yes" # Exit this function and abort backup
+>>>>>>> ace5695c6617be9acd4e32376541d57a89df07cb
         fi
       done
     fi
