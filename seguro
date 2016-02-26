@@ -19,23 +19,29 @@ Passed=" - Feliz Simple Backup Utility - "
 #
 
 MainMenu() {
-  x="Don't quit"
-  until [ x = "Quit" ]
+  Exit="No"
+  until [ $Exit = "Yes" ]
   do
     dialog --backtitle "$Backtitle" --title " Feliz Backup Utility " --no-shadow --ok-button "Select" --cancel-button "Quit" --menu "\nWelcome to the Feliz Backup Utility\n" 15 40 2 \
     "Settings" "View and change" \
     "Run" "Choose and run" 2> seguro.output
     if [ $? -gt 0 ]; then # 'Quit' selected
+      rm seguro.output
       exit
     else
       Selected=`cat seguro.output`
     fi
     case $Selected in
-    "Settings") OpenDataFile    # Open existing file and extract data to arrays (134)
-          DisplayDataFile       # Display settings and enable change any details (162)
+    "Settings") OpenDataFile    # Open existing file and extract data to arrays
+          DisplayDataFile       # Display settings and enable change any details
      ;; 
     *) BackupCheckList # Display sources checklist ()
-      Precheck # Checks that destination is ready before calling ActionBackup ()
+      if [ $Exit = "Yes" ]; then
+        Exit="No"
+      else
+        Precheck # Checks that destination is ready before calling ActionBackup ()
+        Exit="No"
+      fi
     esac
   done
 }
@@ -45,79 +51,91 @@ MainMenu() {
 #
 
 CheckDataFile() {  # First check if data file exists
-while [ ! -f `pwd`/seguro.data ]
-do
-  CreateDataFile
-done
-while [ -z $seguro.data ]  # In case it is empty
-do
-  CreateDataFile
-done
-}
-
-CreateDataFile() { # If this is first time, data file does not exist or is empty.
+if [ ! `ls -f seguro.data` ] || [ -z $seguro.data ]; then # No data file, or empty
   NewDataFile="Yes"
   Exit="No"
   until [ $Exit = "Yes" ]
   do
     # Inform user
     dialog --title " - First - " --clear --msgbox "This appears to be the first time Seguro has run on this machine. Before you can make any backups, you will have to set a destination device and at least one source." 10 45
-    ChooseDestination # Choose destination device
+    DestinationPath # Choose destination device
+    # Create new data file and save destination
+    echo "Destination${DestinationPath}" > seguro.data
     AddSource # Add a source path and label
   done
+fi
 }
 
-ChooseDestination() { # Create a list of available devices
+DestinationPath() { # Choose destination device
   UserName=`whoami`
-  External=`ls /media/$UserName/`
-  Local=`ls ~/`
-  All="$External Local_drive"
-  Message="Choose a destination device for your backups. Make sure that the device is turned on."
+  Message="Choose a destination path for your backups."
   Exit="No"
   until [ $Exit = "Yes" ]
   do
-    listgen1 "$All" " Destination " ""
-    if [ $? -gt 0 ]; then
+    listgen1 "External Local" " Destination " "" # Present list of all devices
+    RetVal=$?
+    if [ $RetVal -gt 0 ]; then # Test for <Cancel>
       Exit="Yes"
-    else
-      Selection=`cat seguro.output`
-      case $Selection in
-      "Local_drive") StartPath="/home/$UserName" ;;
-      *) StartPath="$Selection"
+      break
+    else # Here the user has chosen only whether to use an external device or a local one
+      Selection=`cat seguro.output` # Recover the selection
+      case $Selection in            # Use it to set the startpath
+      "Local") StartPath="/home/$UserName"
+      ;;
+      *) StartPath="/media/$UserName"
       esac
-      dialog --title " - Destination - " --clear --yes-button "$StartPath" --no-button "Deeper" --yesno "Seguro will create a dated folder in your chosen destination for each backup. Use device '$StartPath' or select an existing directory?" 10 45
-      case $? in
-      0) Destination="$StartPath" # ie: Yes - finish with selected $StartPath
+    fi 
+    Browse=`ls $StartPath/`
+    ListPaths  # List available paths on either external or local
+  done
+}
+
+ListPaths() { # When user selects one, create a new seguro.data file with device
+  until [ $Exit = "Yes" ]
+  do
+    listgen1 "$Browse" " Destination " "" # Present list of all devices on chosen path
+    RetVal=$?
+    if [ $RetVal -gt 0 ]; then # Test for <Cancel>
+      Exit="Yes"
+      break
+    else
+      Picked=`cat seguro.output` # Recover the selection
+      dialog --title " - Destination - " --clear --yes-button "Use" --no-button "Deeper" --extra-button --extra-label "Directory" --yesno "Use device '$Picked' or select a directory from that path?" 10 45
+      RetVal=$?
+      case $RetVal in
+      0) DestinationPath="${StartPath}/${Picked}/" # ie: Yes - finish with selected $StartPath
         Exit="Yes"
         ;;
-      *) # ie: No (Existing directory) - offer directories until done
-        if [ $Selection = "Local_drive" ]; then
-          All=`ls $StartPath`
-        else
-          All=`ls /media/$UserName/${StartPath}`
-        fi
+      1) # Cancel button
+        Exit="Yes"
+        continue
+        ;;
+      *) # ie: No - offer directories until done
+        StartPath="${StartPath}/${Picked}/"
+        Browse=`ls ${StartPath}`
+        continue
       esac
     fi
-    # Save filepath output and check it
-    DestinationPath="$All"
-    if [ $NewDataFile="Yes" ]; then
-      # Create new data file and save destination
-      echo "Destination/$StartPath/" > seguro.data
-    else
-      # Replace existing Destination with new one
-      sed -i "/Destination/ c\'Destination/$StartPath/'" seguro.data
-      # Check this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    fi
-    SaveTo="$Destination/${Today}/"
-    Exit="Yes"
   done
+}
+
+EditDestination() { # Edit existing destination
+  # Build a list of available devices
+  UserName=`whoami`
+  Existing=`cat seguro.data | grep Destination`
+  DestinationPath # Returns full path in $DestinationPath
+  # Overwrite the existing entry in seguro.data file
+  sed -i "/Destination/ c\Destination${DestinationPath}" seguro.data
+
+read
+
 }
 
 AddSource() { # Create a new source path
   UserName=`whoami`
   Local=`ls ~/`
   StartPath="/home/$UserName/"
-    Message="Choose a file or folder to add to your data file."
+  Message="Choose a file or folder to add to your data file."
   FirstLevel="Yes"
   Exit="No"
   until [ $Exit = "Yes" ]
@@ -132,7 +150,7 @@ AddSource() { # Create a new source path
       Selection=`cat seguro.output`
       Path="$StartPath$Selection"
       StartPath="$Path/"
-      dialog --title " - Sources - " --clear --yes-button "Save" --extra-button --extra-label "Deeper" --yesno "Save '$Path' to your sources paths, or open it to go deeper? Choose <Cancel> if you wish to do nothing." 10 45
+      dialog --title " - Sources - " --clear --ok-label "Save" --extra-button --extra-label "Deeper" --yesno "Save '$Path' to your sources paths, or open it to go deeper? Choose <Cancel> if you wish to do nothing." 10 45
       case $? in
       0) SelectedPath="$Path"
         Message="Enter a short name for this source\n(up to three or four words is best, preferably not more)"
@@ -153,7 +171,7 @@ AddSource() { # Create a new source path
 }
 
 EditOrDelete() {   # yes/no dialog with options to <Edit> or <Delete> using $SelectedPath & $SelectedLabel
-  dialog --title " - Edit or Delete - " --clear --yes-button "Edit" --extra-button --extra-label "Delete" --no-button "Cancel" --yesno "Selected source path is '$SelectedPath $SelectedLabel'\n Edit the label, or delete this record?" 10 45
+  dialog --title " - Edit or Delete - " --clear --ok-label "Edit" --extra-button --extra-label "Delete" --no-button "Cancel" --yesno "Selected path is '$SelectedPath $SelectedLabel'\n Edit the label, or delete this record?" 10 45
   Action=$?
   case $Action in
   0) EditSource
@@ -185,7 +203,7 @@ EditSource() {  # Edit the label of an existing source using $SelectedPath & $Se
   ReadRecord=`cat -n seguro.data | grep ${SelectedPath}$ | awk '{print $1}'`
   # Replace the selected record number with new one
   sed -i "$ReadRecord d" seguro.data # Delete existing record
-  echo "$Replacement" >> seguro.data # Append new on
+  echo "$Replacement" >> seguro.data # Append new one
 }
 
 DeleteSource() {  # Delete an existing source using $SelectedPath & $SelectedLabel
@@ -233,15 +251,17 @@ DisplayDataFile() {  # Display existing settings and add, delete or change any d
     # Call menu dialog to display all items - a) Destination; b) Sources
     Message="\nHere are all your current backup settings ...\nYou can <Select> one to edit or delete, or you can <Cancel> to quit or <Add> to add a new source."
     listgen2 "$ListofPaths" " - Current Settings - " "add" "LabelArray"
-    case $? in
+    RetVal=$?
+    case $RetVal in
     1) Exit="Yes" # ie: Cancel button selected (no action)
       continue
       ;;
-    2) AddSource # ie: Help button selected (add a source path) ()
+    2) AddSource # ie: Add button selected (add a source path)
       ;;
-    *) SelectedPath=$(cat seguro.output) # ie: Ok/Edit button selected - item to be edited or deleted
+    *) SelectedPath=$(cat seguro.output) # ie: Edit button selected - item to be edited or deleted
       Counter=1                    # Prepare to edit or delete
-      for i in $ListofPaths[@]; do # Match filepath output from dialog with its counterpart in LabelArray
+      for i in $ListofPaths
+      do # Match filepath output from dialog with its counterpart in LabelArray
         if [ $i = $SelectedPath ]; then
           SelectedLabel="${LabelArray[${Counter}]}"
           break                    # Record retrieved, so move on
@@ -251,7 +271,7 @@ DisplayDataFile() {  # Display existing settings and add, delete or change any d
       if [ $SelectedLabel = "Destination" ]; then
         # Special action dialog for Destination - only allows change
         NewDataFile="No"
-        ChooseDestination # (69)
+        EditDestination
       else # ie: This is a source
         EditOrDelete # Pass this record to decision dialog using $SelectedPath & $SelectedLabel
       fi
@@ -386,6 +406,10 @@ BackupCheckList() { # A dialog checklist of saved sources.
   dialog --backtitle " - Seguro Backup - " --title " - Run backup - " --separate-output --checklist "Select which items to backup using this list.\nPress SPACE to toggle an item on/off" 20 61 5 \
         "${Options[@]}" \
         2> seguro.output
+  RetVal=$?
+  if [ $RetVal -gt 0 ]; then      
+    Exit="Yes"
+  fi
 }
 
 Precheck() { # Check that destination is switched on before starting action
@@ -460,7 +484,8 @@ TestDestination() { # Checks that destination device is available
           Target=`ls $Destination` # Try again
         else
           Target="Yes"
-          break # Exit this function
+          Exit="Yes"
+          break # Quit this function
         fi
       done
     fi
@@ -476,4 +501,3 @@ CheckDataFile # First check if data file exists, and if not create it
 # Let's have a main menu in this one!!!
 MainMenu
 
-rm seguro.output
