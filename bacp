@@ -19,7 +19,8 @@
 #
 declare -a LabelArray # Labels require an array as they may be several words with spaces
 declare -a PathArray  # Filepaths may also have spaces
-BackTitle="            ~ bacp : backup utility ~"
+declare -a Options    # Used by listgen to display list items
+BackTitle=" bacp : simple backup utility using cp"
 
 #
 # Functions
@@ -64,7 +65,7 @@ if [ ! `ls -f bacp.data` ] || [ -z $bacp.data ]; then # No data file, or empty
     dialog --title " - First - " --clear --no-shadow --msgbox "This appears to be the first time bacp has run on this machine. Before you can make any backups, you will have to set a destination device and at least one source." 10 45
     DestinationPath # Choose destination device
     # Create new data file and save destination
-    echo "Destination${DestinationPath}" > bacp.data
+    echo "Destination${SetPath}" > bacp.data
     AddSource # Add a source path and label
   done
 fi
@@ -77,7 +78,7 @@ DisplaySettings() { # Display contents of settings file
   Quit="No"
   until [ $Quit = "Yes" ]
   do
-    declare -a Options
+    Options=() # Clear the listgen array
     Counter=0
     for item in ${PathArray[@]}; do
       Items[${Counter}]=$item
@@ -171,18 +172,18 @@ EditDestination() { # Edit existing destination
 AddSource() { # Create a new source path
   # Start by preparing a file containing all items in local path
   UserName=`whoami`
-  ls ~/ > localpath.output
+  ls ~/ > path.output
   StartPath="/home/$UserName/"
   FirstLevel="Yes"
   Quit="No"
   until [ $Quit = "Yes" ]
   do
     # Prepare array of long labels
-    HowMany=`cat -n localpath.output | awk '{print $1}' | tail -c -4`
+    HowMany=`cat -n path.output | awk '{print $1}' | tail -c -4`
     PathArray=()
     for ((Count=1;Count<=$HowMany;Count++))
       {
-      PathArray[${Count}]=`sed -n "$Count p" localpath.output`
+      PathArray[${Count}]=`sed -n "$Count p" path.output`
       }
     Counter=1
     ItemCounter=1
@@ -209,8 +210,8 @@ AddSource() { # Create a new source path
       FirstLevel="No"            # Return to previous level
     else
       Output=`cat bacp.output`
-      Selection=`sed -n "${Output} p" localpath.output`
-      rm localpath.output
+      Selection=`sed -n "${Output} p" path.output`
+      rm path.output
       Path="${StartPath}${Selection}"
       if [[ -d ${Path} ]]; then # Selection is a directory - save it or drill down
         StartPath="${Path}/"
@@ -276,19 +277,20 @@ DestinationPath() { # Choose destination device
       Quit="Yes"
       break
     else # Here the user has chosen only whether to use an external device or a local one
-      Selection=`cat bacp.output` # Recover the selection
+      Selection=`cat bacp.output`   # Recover the selection from listgen output file
       case $Selection in            # Use it to set the startpath
       "Local") StartPath="/home/$UserName"
       ;;
       *) StartPath="/media/$UserName"
       esac
     fi
-    Browse=`ls $StartPath/`
-    ListPaths  # List available paths on either external or local
+    ListPaths  # Use contents of $StartPath to list available paths on either external or local device
   done
 }
 
-ListPaths() { # When user selects one, create a new bacp.data file with device
+ListPaths() { # Display directory of $StartPath
+  Browse=`ls $StartPath/`
+  # When user selects one, create a new bacp.data file with device
   until [ $Quit = "Yes" ]
   do
     listgen1 "$Browse" " Destination " "" # Present list of all devices on chosen path
@@ -298,21 +300,19 @@ ListPaths() { # When user selects one, create a new bacp.data file with device
       Quit="Yes"
       break
     else
-      Picked=`cat bacp.output` # Recover the selection
+      Picked=`cat bacp.output` # Recover the selection from listgen
       dialog --title " - Destination - " --clear --no-shadow --yes-button "Use" --no-button "Deeper" --extra-button --extra-label "Directory" --yesno "Use device '$Picked' or select a directory from that path?" 10 45
       RetVal=$?
       case $RetVal in
-      0) SetPath="${StartPath}/${Picked}/" # ie: Yes - finish with selected $StartPath
+      0) SetPath="${StartPath}/${Picked}/" # ie: Yes - finish with selected path
         Quit="Yes"
         ;;
       1) # Cancel button
         Quit="Yes"
-        continue
         ;;
       *) # ie: No - offer directories until done
         StartPath="${StartPath}/${Picked}/"
         Browse=`ls ${StartPath}`
-        continue
       esac
     fi
   done
@@ -366,7 +366,7 @@ listgen1() { # Prepare single-column list
     CancelButton=""
   fi
   Counter=0
-  declare -a Options
+  Options=() # Clear listgen array
   if [ ! $Width ]; then
     Width=40
   fi
@@ -398,7 +398,7 @@ listgen2() { # Prepare dual-column list
   else
     CancelButton=""
   fi
-  declare -a Options
+  Options=() # Clear listgen array
   Counter=0
   for item in $1; do
     Items[${Counter}]=$item
@@ -457,20 +457,20 @@ BackupCheckList() { # A dialog checklist of saved sources.
     OpenDataFile # 1) Rebuild list of names to be sure it's up-to-date
     # Prepare for display
     local Counter=1
-    LineCounter=0
-    declare -a Options
+    LineCounter=1
+    Options=() # Clear listgen array
     # Prepare Options array for dialog checklist
-    until [ $LineCounter -eq $HowMany ]
+    while [ $LineCounter -lt $HowMany ]
     do
-      LineCounter=$((LineCounter+1))
       if [ "${LabelArray[${LineCounter}]}" != "Destination" ]; then
         Options[${Counter}]="${LabelArray[${LineCounter}]}"
         Counter=$((Counter+1))
-        Options[${Counter}]=" "
+        Options[${Counter}]=""
         Counter=$((Counter+1))
         Options[${Counter}]="on"
         Counter=$((Counter+1))
       fi
+      LineCounter=$((LineCounter+1))
     done
     # User selects from checklist
     dialog --backtitle " - bacp : Backup Utility - " --title " - Run backup - " --no-shadow --separate-output --extra-button --extra-label "Add" --checklist "Select which items to backup using this list.\nPress SPACE to toggle an item on/off" 20 61 5 \
@@ -509,44 +509,55 @@ ActionBackup() { # Retrieve items and copy sources to destination
   # Go through the list of selected items, checking label against $LabelArray
   # and getting record number to retrieve path from $PathArray
   Counter=1
+  echo "" > error.file
   until [ $Counter -gt $HowMany ]
   do
     item=`cat -n bacp.output | grep $Counter | cut -c 8-`
-    Count=1
+    Count=0
     until [ $Count -eq $HowMany ]
     do
       Retrieve=$((Count+1)) # Use item number in the arrays, ignoring Destination
       if [ "${LabelArray[${Retrieve}]}" = "$item" ]; then # Item matches $LabelArray
         ItemPath=${PathArray[${Retrieve}]}                # Find same number in PathArray
-        cp -r $ItemPath $Destination$Today/
+        cp -r $ItemPath $Destination$Today/ 2>> bacp.error.file
         break
       fi
       Count=$((Count+1))
     done
     Counter=$((Counter+1))
   done
+  if [ -n `cat bacp.error.file` ]; then
+    dialog --title " - Finished - " --clear --no-shadow --msgbox "Finished, but with errors. Check bacp.error.file" 8 45
+  else
+    dialog --title " - Finished - " --clear --no-shadow --msgbox "Finished backup. It is always wise to check the saved files for completeness" 8 45
+  fi
+
 }
 
 TestDestination() { # Checks that destination device is available
   Quit="No"
   until [ $Quit = "Yes" ]
   do
-    Destination=`cat bacp.data | awk '{print $1}' | cut -c 12-`
-    Target=`ls $Destination` # Check that it is turned on
-    if [ -n "$Target" ]; then
-      Today=`date +%F`       # Today's date
+    Destination=`cat bacp.data | grep Destination | awk '{print $1}' | cut -c 12-`
+    Target=`ls $Destination`  # Check that it is turned on
+    if [ -n "$Target" ]; then # Target is turned on
+      Today=`date +%F`        # Today's date
       Target1=`ls $Destination | grep ${Today}` # Check for existing backup
-      if [ -z "$Target1" ]; then
+      if [ -z "$Target1" ]; then # If no existing dated directory
         mkdir $Destination$Today # Make dated directory on destination device
       fi
-    else
-      while [ -z "$Target" ] # Destination is not available
+      Target="Yes" # Set flags
+      Quit="Yes"
+      break        # Quit this function
+    else # If target is not turned on
+      while [ -z "$Target" ] # Loop while destination is not available
       do
-        dialog --title " - Not ready - " --clear --no-shadow --yesno "The destination device appears to be turned off. Please turn it on. Try again?" 10 45
-        if [ $? -eq 0 ]; then
-          Target=`ls $Destination` # Try again
+        dialog --title " - Not ready - " --clear --no-shadow --yesno "The destination device appears to be turned off. Please turn it on.\nTry again?" 10 45
+        RetVal=$?
+        if [ $RetVal -eq 0 ]; then  # Try again
+          Target=`ls $Destination`  # Check that it is turned on
         else
-          Target="Yes"
+          Target=""
           Quit="Yes"
           break # Quit this function
         fi
