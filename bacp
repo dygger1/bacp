@@ -515,16 +515,17 @@ ActionBackup() { # Retrieve items and copy sources to destination
   # Go through the list of selected items, checking label against $LabelArray
   # and getting record number to retrieve path from $PathArray
   Counter=1
-  echo "" > bacp.error.file
+  echo "" > bacp.error.file # Clear the error file
   until [ $Counter -gt $HowMany ]
   do
-    item=`cat -n bacp.output | grep $Counter | cut -c 8-`
+    item=`sed -n "$Counter p" bacp.output`
     Count=0
     until [ $Count -eq $HowMany ]
     do
       Retrieve=$((Count+1)) # Use item number in the arrays, ignoring Destination
       if [ "${LabelArray[${Retrieve}]}" = "$item" ]; then # Item matches $LabelArray
         ItemPath=${PathArray[${Retrieve}]}                # Find same number in PathArray
+        dialog --backtitle "$Backtitle" --title " Information " --no-shadow --infobox "Copying $ItemPath\n" 5 55; sleep 1
         cp -r $ItemPath $Destination$Today/ 2>> bacp.error.file
         break
       fi
