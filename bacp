@@ -25,7 +25,7 @@ BackTitle=" bacp : simple backup utility using cp"
 #
 # Functions
 #
-Main() {
+Main() { # Home screen - all paths must return here
   Quit="No"
   until [ $Quit = "Yes" ]
   do
@@ -53,8 +53,8 @@ Main() {
 }
 
 #
-# Data file handling
-# First data check (called before any action)
+# Data file handling ...
+#
 CheckDataFile() {  # First check if data file exists
 if [ ! `ls -f bacp.data` ] || [ -z $bacp.data ]; then # No data file, or empty
   NewDataFile="Yes"
@@ -63,7 +63,7 @@ if [ ! `ls -f bacp.data` ] || [ -z $bacp.data ]; then # No data file, or empty
   do
     # Inform user
     dialog --title " - First - " --clear --no-shadow --msgbox "This appears to be the first time bacp has run on this machine. Before you can make any backups, you will have to set a destination device and at least one source." 10 45
-    DestinationPath # Choose destination device
+    DestinationPath # Prepare list of destination devices
     # Create new data file and save destination
     echo "Destination${SetPath}" > bacp.data
     AddSource # Add a source path and label
@@ -94,7 +94,7 @@ DisplaySettings() { # Display contents of settings file
     done
     Counter=$((Counter/2))
     # Use $Counter and ${Options[@]} array in dialog
-    dialog --backtitle "$BackTitle" --title " - Settings - " --no-shadow --ok-button "Select" --extra-button --extra-label "Add" --menu "\nHere are all your current backup settings ...\nYou can <Select> one to edit or delete, or you can <Cancel> to quit or <Add> to add a new source." 15 60 $Counter "${Options[@]}" 2> bacp.output
+    dialog --backtitle "$BackTitle" --title " - Settings - " --no-shadow --ok-button "Select" --cancel-label "Done" --extra-button --extra-label "Add" --menu "\nHere are all your current backup settings ...\nYou can <Select> one to edit or delete, or choose <Add> to add a new source." 15 60 $Counter "${Options[@]}" 2> bacp.output
     RetVal=$?
     case $RetVal in
       0) # ie: Ok/Edit button selected - item to be edited or deleted
@@ -164,8 +164,8 @@ EditDestination() { # Edit existing destination
   # Build a list of available devices
   UserName=`whoami`
   Existing=`cat bacp.data | grep Destination`
-  DestinationPath # Call function that returns full path in $DestinationPath
-  # Overwrite the existing entry in bacp.data file
+  DestinationPath # Prepare list of devices
+  # On return of $SetPath, overwrite the existing entry in bacp.data file
   sed -i "/Destination/ c\Destination${SetPath}" bacp.data
 }
 
@@ -174,6 +174,7 @@ AddSource() { # Create a new source path
   UserName=`whoami`
   ls ~/ > path.output
   StartPath="/home/$UserName/"
+  DisplayPath="$StartPath"
   FirstLevel="Yes"
   Quit="No"
   until [ $Quit = "Yes" ]
@@ -201,20 +202,24 @@ AddSource() { # Create a new source path
       fi
     done
     Counter=$((Counter/2)) # True list items count
-    # Use $Counter and ${Options[@]} array in dialog
-    dialog --backtitle "$BackTitle" --title " - Local files & folders - " --no-shadow --ok-button "Select" --menu "Choose a file or folder to add to your data file.\n" 20 60 $Counter "${Options[@]}" 2> bacp.output
+    # Use $Counter and ${Options[@]} array in menu dialog
+    dialog --backtitle "$BackTitle" --title " - Local files & folders - " --no-shadow --ok-button "Select" --menu "Contents of $DisplayPath\nChoose a file or folder to add to your data file.\n" 20 60 $Counter "${Options[@]}" 2> bacp.output
     RetVal=$?
-    if [ $RetVal -gt 0 ] && [ $FirstLevel = "Yes" ]; then # <Cancel> on first level
-      Quit="Yes"
-    elif [ $RetVal -gt 0 ]; then # <Cancel> on subsequent level
-      FirstLevel="No"            # Return to previous level
+    if [ $RetVal -gt 0 ]; then # <Cancel> selected
+      if [ $FirstLevel = "Yes" ]; then
+        Quit="Yes"
+      else # Reset all to start position
+        ls ~/ > path.output
+        DisplayPath="$StartPath"
+        FirstLevel="Yes"
+        Quit="No"
+      fi
     else
       Output=`cat bacp.output`
       Selection=`sed -n "${Output} p" path.output`
       rm path.output
       Path="${StartPath}${Selection}"
       if [[ -d ${Path} ]]; then # Selection is a directory - save it or drill down
-        StartPath="${Path}/"
         dialog --title " - Sources - " --clear --no-shadow --ok-label "Save" --extra-button --extra-label "Deeper" --yesno "Save '$Path' to your sources paths, or open it to go deeper? Choose <Cancel> if you wish to do nothing." 8 60
         RetVal=$?
         case $RetVal in
@@ -227,7 +232,9 @@ AddSource() { # Create a new source path
               break
             fi
           ;;
-          3) Local=`ls $Path` # Offer directories until done
+          3) ls $Path > path.output # Going deeper
+            DisplayPath="$Path/"    # For menu
+            FirstLevel="No"
           ;;
           *) SelectedPath=""
             Quit="Yes"
@@ -250,6 +257,7 @@ AddSource() { # Create a new source path
       fi
     fi
   done
+  rm path.output
 }
 
 EditOrDelete() {   # yes/no dialog with options to <Edit> or <Delete> using $SelectedPath & $SelectedLabel
@@ -473,9 +481,7 @@ BackupCheckList() { # A dialog checklist of saved sources.
       LineCounter=$((LineCounter+1))
     done
     # User selects from checklist
-    dialog --backtitle " - bacp : Backup Utility - " --title " - Run backup - " --no-shadow --separate-output --extra-button --extra-label "Add" --checklist "Select which items to backup using this list.\nPress SPACE to toggle an item on/off" 20 61 5 \
-        "${Options[@]}" \
-        2> bacp.output
+    dialog --backtitle " - bacp : Backup Utility - " --title " - Run backup - " --no-shadow --separate-output --extra-button --extra-label "Add" --checklist "Select which items to backup using this list.\nPress SPACE to toggle an item on/off" 15 61 $LineCounter "${Options[@]}" 2> bacp.output
     RetVal=$?
     case $RetVal in
     0) # Ok/Yes
@@ -509,7 +515,7 @@ ActionBackup() { # Retrieve items and copy sources to destination
   # Go through the list of selected items, checking label against $LabelArray
   # and getting record number to retrieve path from $PathArray
   Counter=1
-  echo "" > error.file
+  echo "" > bacp.error.file
   until [ $Counter -gt $HowMany ]
   do
     item=`cat -n bacp.output | grep $Counter | cut -c 8-`
@@ -526,7 +532,8 @@ ActionBackup() { # Retrieve items and copy sources to destination
     done
     Counter=$((Counter+1))
   done
-  if [ -n `cat bacp.error.file` ]; then
+  Finished=`cat bacp.error.file`
+  if [ -n $Finished ]; then
     dialog --title " - Finished - " --clear --no-shadow --msgbox "Finished, but with errors. Check bacp.error.file" 8 45
   else
     dialog --title " - Finished - " --clear --no-shadow --msgbox "Finished backup. It is always wise to check the saved files for completeness" 8 45
