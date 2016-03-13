@@ -512,20 +512,21 @@ Precheck() { # Check that destination is switched on before starting action
 }
 
 ActionBackup() { # Retrieve items and copy sources to destination
-  HowMany=`cat -n bacp.output | awk '{print $1}' | tail -c -2`
+  HowManySelected=`cat -n bacp.output | awk '{print $1}' | tail -c -2`
   # Go through the list of selected items, checking label against $LabelArray
   # and getting record number to retrieve path from $PathArray
   Counter=1
   echo "" > bacp.error.file # Clear the error file
-  until [ $Counter -gt $HowMany ]
+  until [ $Counter -gt $HowManySelected ] # Outer iteration - selections
   do
-    item=`sed -n "$Counter p" bacp.output`
+    item=`sed -n "$Counter p" bacp.output` #  Read each selected source in turn
+    HowManyRecords=${#LabelArray[@]}
     Count=0
-    until [ $Count -gt $HowMany ]
+    until [ $Count -gt $HowManyRecords ] # Inner iteration - arrays
     do
-      Retrieve=$((Count+1)) # Use item number in the arrays, ignoring Destination
-      if [ "${LabelArray[${Retrieve}]}" = "$item" ]; then # Item matches $LabelArray
-        ItemPath=${PathArray[${Retrieve}]}                # Find same number in PathArray
+      Count=$((Count+1))  # Increment before using, to ignore Destination
+      if [ "${LabelArray[${Count}]}" = "$item" ]; then    # Item matches $LabelArray
+        ItemPath=${PathArray[${Count}]}                   # Find same number in PathArray
         dialog --backtitle "$Backtitle" --title " Information " --no-shadow --infobox "Copying $ItemPath\n" 5 55; sleep 1
         # The following code is to make sure that paths containing spaces are handled correctly
           echo $ItemPath  | sed 's/ /\\ /g' > bacp.temp.file
@@ -535,12 +536,11 @@ ActionBackup() { # Retrieve items and copy sources to destination
         cp -r $ItemPath $Destination$Today/ 2>> bacp.error.file
         break
       fi
-      Count=$((Count+1))
     done
     Counter=$((Counter+1))
   done
   Finished=`cat bacp.error.file`
-  if [ -n $Finished ]; then
+  if [ $Finished ]; then
     dialog --title " - Finished - " --clear --no-shadow --msgbox "Finished, but with errors. Check bacp.error.file" 8 45
   else
     dialog --title " - Finished - " --clear --no-shadow --msgbox "Finished backup. It is always wise to check the saved files for completeness" 8 45
