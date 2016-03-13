@@ -6,7 +6,7 @@
 # Simple backup utility.
 # Keeps a small data file of user settings
 # Makes copies of selected data to defined device
-# into a folder it creates, called by the day's date
+# into a folder it creates named by the current date and time
 
 # This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
 
@@ -46,7 +46,7 @@ Main() { # Home screen - all paths must return here
         Quit="No"
      ;;
     *) # No/Cancel/Esc = Quit
-       rm bacp.output # Clear working file
+       rm bacp.output # Tidy up
       exit
     esac
   done
@@ -74,40 +74,39 @@ fi
 # Settings
 #
 DisplaySettings() { # Display contents of settings file
-  OpenDataFile  # Function to get existing settings
+  OpenDataFile      # Call function to get existing settings
   Quit="No"
-  until [ $Quit = "Yes" ]
+  until [ $Quit = "Yes" ] # Prepare arrays for display
   do
-    Options=() # Clear the listgen array
-    Counter=0
-    for item in ${PathArray[@]}; do
-      Items[${Counter}]=$item
-      Counter=$((Counter+1))
-    done
+    Options=() # Clear the array used by listgen
     Counter=0
     ItemCounter=0
-    for item in "${LabelArray[@]}"; do
-      Options[$((Counter))]="${Items[${ItemCounter}]}"
-      Options[$((Counter+1))]="$item"
+    until [ $ItemCounter -gt $HowMany ]  # Match labels to paths
+    do
+      Options[$((Counter))]="${PathArray[${ItemCounter}]}"     # Path
+      Options[$((Counter+1))]="${LabelArray[${ItemCounter}]}"  # Label
       Counter=$((Counter+2))
       ItemCounter=$((ItemCounter+1))
     done
-    Counter=$((Counter/2))
+    Counter=$((Counter/2)) # Number of records
     # Use $Counter and ${Options[@]} array in dialog
-    dialog --backtitle "$BackTitle" --title " - Settings - " --no-shadow --ok-button "Select" --cancel-label "Done" --extra-button --extra-label "Add" --menu "\nHere are all your current backup settings ...\nYou can <Select> one to edit or delete, or choose <Add> to add a new source." 15 60 $Counter "${Options[@]}" 2> bacp.output
+    dialog --backtitle "$BackTitle" --title " - Settings - " --no-shadow --ok-button "Select" --cancel-label "Done" --extra-button --extra-label "Add" --menu "\nHere are all your current backup settings ...\nYou can <Select> one to edit or delete, or choose <Add> to add a new source." 15 65 $Counter "${Options[@]}" 2> bacp.output
     RetVal=$?
     case $RetVal in
-      0) # ie: Ok/Edit button selected - item to be edited or deleted
+      0) # ie: <Ok>/<Edit> button selected - item to be edited or deleted
         SelectedPath=$(cat bacp.output)
-        Counter=1                    # Prepare to edit or delete
-        for i in $ListofPaths
-        do # Match filepath output from dialog with its counterpart in LabelArray
-          if [ $i = $SelectedPath ]; then
-            SelectedLabel="${LabelArray[${Counter}]}"
-            break                    # Record retrieved, so move on
+        Counter=0
+        ItemCounter=0
+        until [ $ItemCounter -gt $HowMany ]  # Find record number of SelectedPath
+        do
+          if [ "${SelectedPath}" = "${PathArray[${ItemCounter}]}" ]; then
+            break
           fi
-          Counter=$((Counter+1))
+          Counter=$((Counter+2))
+          ItemCounter=$((ItemCounter+1))     # Record number (starting from 0)
         done
+        SelectedLabel="${LabelArray[${ItemCounter}]}" # Matching label
+
         # Appropriate action dialog
         if [ $SelectedLabel = "Destination" ]; then
           # Special action dialog for Destination - only allows change
@@ -117,9 +116,9 @@ DisplaySettings() { # Display contents of settings file
           EditOrDelete # Pass this record to decision dialog using $SelectedPath & $SelectedLabel
         fi
       ;;
-      3) AddSource # ie: Add button selected (add a source path)
+      3) AddSource # ie: <Add> button selected (add a source path)
       ;;
-      *) # Catchall for Cancel button (1) selected (no action) or Esc
+      *) # Catchall for <Cancel> button (1) selected (no action) or Esc
         Quit="Yes"
         continue
     esac
@@ -129,12 +128,10 @@ DisplaySettings() { # Display contents of settings file
 
 OpenDataFile() { # Extract existing settings file into arrays
   # Called by almost all routines
-  HowMany=`cat -n bacp.data | awk '{print $1}' | tail -c -2` # Count number of lines
-  # Copy each line into array. Line consists of a label and a filepath
   # Both the label and the filepath may contain spaces
-  # (This sed code may be useful at some stage to escape blanks) : sed -i 's/ /\\ /g' temp
   # But there are no spaces between the label and path
-  # 1) Copy contents of the file into an array
+  # 1) Copy contents of the file into an array. Line consists of a label and a filepath
+  HowMany=`cat -n bacp.data | awk '{print $1}' | tail -c -2` # Count number of lines
   ItemsArray=()
   Count=0
   until [ $Count -gt $HowMany ]; do
@@ -155,8 +152,7 @@ OpenDataFile() { # Extract existing settings file into arrays
     LengthOfLabel=$(( LengthOfLabel +1 ))
     # Path
     FilePath=`echo ${ItemsArray[${Count}]} | cut -c ${LengthOfLabel}-`
-    PathArray[${Count}]="$FilePath"
-    ListofPaths="$ListofPaths $FilePath" # For menu display
+    PathArray[${Count}]="$FilePath" # Save to array
     }
 }
 
@@ -169,27 +165,29 @@ EditDestination() { # Edit existing destination
   sed -i "/Destination/ c\Destination${SetPath}" bacp.data
 }
 
-AddSource() { # Create a new source path
+AddSource() { ## Create a new source path
   # Start by preparing a file containing all items in local path
   UserName=`whoami`
-  ls ~/ > path.output
-  StartPath="/home/$UserName/"
-  DisplayPath="$StartPath"
-  FirstLevel="Yes"
+  ls ~/ > path.output             # Save list of home directory
+  StartPath="/home/$UserName/"    # Set home path
+  DisplayPath="/home/$UserName/"  # And set initial path to home
+  FirstLevel="Yes"                # In case dropping back from deeper search
   Quit="No"
   until [ $Quit = "Yes" ]
   do
     # Prepare array of long labels
-    HowMany=`cat -n path.output | awk '{print $1}' | tail -c -4`
-    PathArray=()
-    for ((Count=1;Count<=$HowMany;Count++))
-      {
-      PathArray[${Count}]=`sed -n "$Count p" path.output`
-      }
+    HowMany=`cat -n path.output | awk '{print $1}' | tail -c -3` # Count items in selected directory
+    PathArray=()                                                 # Clear the array ready for new list
+    Count=1
+    until [ $Count -gt $HowMany ] # Iterate through new listing
+    do
+      PathArray[${Count}]=`sed -n "$Count p" path.output`        # Copy each item to array
+      Count=$((Count+1))
+    done
+    # Prepare $Options array for dialog menu
     Counter=1
     ItemCounter=1
     Width=50
-    # Prepare short and long labels for dialog menu
     Options=()
     for item in "${PathArray[@]}"; do
       Options[$((Counter))]=${ItemCounter}
@@ -201,10 +199,10 @@ AddSource() { # Create a new source path
         Width=$((Length+30))
       fi
     done
-    Counter=$((Counter/2)) # True list items count
-    # Use $Counter and ${Options[@]} array in menu dialog
-    dialog --backtitle "$BackTitle" --title " - Local files & folders - " --no-shadow --ok-button "Select" --menu "Contents of $DisplayPath\nChoose a file or folder to add to your data file.\n" 20 60 $Counter "${Options[@]}" 2> bacp.output
+    # Use $ItemCounter and ${Options[@]} array in menu dialog
+    dialog --backtitle "$BackTitle" --title " - Local files & folders - " --no-shadow --ok-button "Select" --menu "Contents of $DisplayPath\nChoose a file or folder to add to your data file.\n" 20 60 $ItemCounter "${Options[@]}" 2> bacp.output # Output file holds the line number of selection
     RetVal=$?
+    # Act on button-press and item selected
     if [ $RetVal -gt 0 ]; then # <Cancel> selected
       if [ $FirstLevel = "Yes" ]; then
         Quit="Yes"
@@ -214,36 +212,39 @@ AddSource() { # Create a new source path
         FirstLevel="Yes"
         Quit="No"
       fi
-    else
-      Output=`cat bacp.output`
-      Selection=`sed -n "${Output} p" path.output`
-      rm path.output
-      Path="${StartPath}${Selection}"
-      if [[ -d ${Path} ]]; then # Selection is a directory - save it or drill down
-        dialog --title " - Sources - " --clear --no-shadow --ok-label "Save" --extra-button --extra-label "Deeper" --yesno "Save '$Path' to your sources paths, or open it to go deeper? Choose <Cancel> if you wish to do nothing." 8 60
+    else ## Handling of user choice for selected directory starts here
+      Output=`cat bacp.output` # This is the line number of the selected item
+      Selection=`sed -n "${Output} p" path.output`   # Get the selected item from file
+      Path="${DisplayPath}${Selection}"
+      if [[ -d ${Path} ]]; then     # Selection is a directory
+        # Offer option to save it as a source or open to drill down
+        dialog --title " - Sources - " --clear --no-shadow --ok-label "Save" --extra-button --extra-label "Open" --yesno "Save '$Path' to your sources paths, or open it? Choose <Cancel> if you wish to do nothing." 8 60
         RetVal=$?
         case $RetVal in
-          0) SelectedPath="$Path"
+          0) SelectedPath="$Path"   # <Ok>/<Save> option selected
             Message="Enter a short name for this source\n(up to three or four words is best, preferably not more)"
-            EditLabel # Enter a label to $SelectedLabel
+            EditLabel # Function call - enter a label - sets $SelectedLabel
             if [ -n "$SelectedLabel" ]; then
               # Save new record
               echo "$SelectedLabel$SelectedPath/" >> bacp.data
               break
             fi
           ;;
-          3) ls $Path > path.output # Going deeper
-            DisplayPath="$Path/"    # For menu
-            FirstLevel="No"
+          3) # <Open> option selected - prepare file and variables for display
+            echo $Path > path.output                       # Save path to file
+            SearchPath=`cat path.output | sed 's/ /\\ /g'` # Format it for ls command
+            ls "${SearchPath}" > path.output               # Then save listing
+            DisplayPath="$Path/" # Included in message of dialog menu at line 202 in this function
+            FirstLevel="No"      #
           ;;
-          *) SelectedPath=""
-            Quit="Yes"
-        esac
+          *) SelectedPath="$StartPath"
+            FirstLevel="Yes"
+         esac
       else # Selection is a file - save it or cancel
         dialog --title " - Sources - " --clear --no-shadow --ok-label "Save" --yesno "Save '$Path' to your sources paths?" 10 45
         RetVal=$?
         case $RetVal in
-          0) SelectedPath="$Path"
+          0) SelectedPath="$Path" # <Save>
             Message="Enter a short name for this source\n(up to three or four words is best, preferably not more)"
             EditLabel # Enter a label to $SelectedLabel
             if [ -n "$SelectedLabel" ]; then
@@ -251,8 +252,8 @@ AddSource() { # Create a new source path
               break
             fi
           ;;
-          *) SelectedPath=""
-            Quit="Yes"
+          *) SelectedPath="$StartPath"
+            FirstLevel="Yes"
         esac
       fi
     fi
@@ -261,7 +262,7 @@ AddSource() { # Create a new source path
 }
 
 EditOrDelete() {   # yes/no dialog with options to <Edit> or <Delete> using $SelectedPath & $SelectedLabel
-  dialog --title " - Edit or Delete - " --clear --no-shadow --ok-label "Edit" --extra-button --extra-label "Delete" --no-button "Cancel" --yesno "Selected path is '$SelectedPath $SelectedLabel'\n Edit the label, or delete this record?" 10 45
+  dialog --title " - Edit or Delete - " --clear --no-shadow --ok-label "Edit" --extra-button --extra-label "Delete" --no-button "Cancel" --yesno "Selected path is:\n  $SelectedPath\nLabeled:\n  $SelectedLabel\nEdit the label, or delete this record?" 10 50
   Action=$?
   case $Action in
   0) EditSource
@@ -520,12 +521,17 @@ ActionBackup() { # Retrieve items and copy sources to destination
   do
     item=`sed -n "$Counter p" bacp.output`
     Count=0
-    until [ $Count -eq $HowMany ]
+    until [ $Count -gt $HowMany ]
     do
       Retrieve=$((Count+1)) # Use item number in the arrays, ignoring Destination
       if [ "${LabelArray[${Retrieve}]}" = "$item" ]; then # Item matches $LabelArray
         ItemPath=${PathArray[${Retrieve}]}                # Find same number in PathArray
         dialog --backtitle "$Backtitle" --title " Information " --no-shadow --infobox "Copying $ItemPath\n" 5 55; sleep 1
+        # The following code is to make sure that paths containing spaces are handled correctly
+          echo $ItemPath  | sed 's/ /\\ /g' > bacp.temp.file
+          ItemPath=`cat bacp.temp.file`
+          rm bacp.temp.file # Tidy up
+        # Then proceed to copy
         cp -r $ItemPath $Destination$Today/ 2>> bacp.error.file
         break
       fi
@@ -539,7 +545,6 @@ ActionBackup() { # Retrieve items and copy sources to destination
   else
     dialog --title " - Finished - " --clear --no-shadow --msgbox "Finished backup. It is always wise to check the saved files for completeness" 8 45
   fi
-
 }
 
 TestDestination() { # Checks that destination device is available
@@ -549,10 +554,10 @@ TestDestination() { # Checks that destination device is available
     Destination=`cat bacp.data | grep Destination | awk '{print $1}' | cut -c 12-`
     Target=`ls $Destination`  # Check that it is turned on
     if [ -n "$Target" ]; then # Target is turned on
-      Today=`date +%F`        # Today's date
+      Today=`date +%Y:%m:%d:%k:%M` # Today's date and time
       Target1=`ls $Destination | grep ${Today}` # Check for existing backup
-      if [ -z "$Target1" ]; then # If no existing dated directory
-        mkdir $Destination$Today # Make dated directory on destination device
+      if [ -z "$Target1" ]; then  # If no existing dated directory
+        mkdir $Destination$Today  # Make dated directory on destination device
       fi
       Target="Yes" # Set flags
       Quit="Yes"
@@ -570,26 +575,8 @@ TestDestination() { # Checks that destination device is available
           break # Quit this function
         fi
       done
-      # Check in case file exists with today's date
-      CheckTarget # If not, create it, if it does, ask whether to overwrite
     fi
   done
-}
-
-CheckTarget() { # Checks in case target folder and files already exists
-  if [ ! -d "$saveto" ]; then # If not, create it
-    mkdir "${saveto}"
-    echo "Copying files from $savefrom to $saveto"
-    cp -a ${savefrom} ${saveto}
-  else  # If it does, ask whether to overwrite
-    read -p "Files already exist in target directory $Target1. Overwrite? (y/n) : " Response
-    case $Response in
-      "y" | "Y" | "") echo "Copying files from $savefrom to $saveto"
-          cp -a ${savefrom} ${saveto}
-        ;;
-      *) echo "Not copying"
-    esac
-  fi
 }
 
 #
