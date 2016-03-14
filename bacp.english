@@ -1,5 +1,5 @@
-# 							
-# English Translation File		
+#
+# English Translation File
 # ------------------------
 # Written by Elizabeth Mills
 # 13 March 2016
@@ -34,7 +34,7 @@ _DS_Text2="You can <Select> one to edit or delete, or choose <Add> to add a new 
 _AS1_Title="Local files & folders"
 _AS1_Ok="Select"
 _AS1_Text1="Contents of"
-_AS1_Text2="Choose a file or folder to add to your data file"
+_AS1_Text2="Choose source files or folders to add to your data file"
 
 _AS2_Title="Sources"
 _AS2_Ok="Save"
@@ -72,14 +72,15 @@ _LP_Yes="Use"
 _LP_No="Open"
 _LP_Extra="Directory"
 _LP_Text1="Use device"
-_LP_Text2="or select a directory from that path?""
+_LP_Text2="or select a directory from that path?"
 
 # EditSource()
 _ES_Message1="This source is currently labelled"
 _ES_Message2="Enter a new short name for this source (up to three or four words is best, preferably not more) or <Cancel> to leave it as it is"
 
 # DeleteSource()
-_DS_Text="Are you sure you want to delete this record?"
+_DeleteSource_Title="Confirm"
+_DeleteSource_Text="Are you sure you want to delete this record?"
 
 # EditLabel()
 _EL_Title="Sources"
@@ -98,3 +99,8 @@ _AB_Text="Copying"
 _TD_Title="Not ready"
 _TD_Text1="The destination device appears to be turned off. Please turn it on"
 _TD_Text2="Try again?"
+
+# Finished
+_Finished_Title="Finished"
+_Finished_Text1="Finished, but with errors. Check bacp.error.file"
+_Finished_Text2="Finished backup. It is always wise to check the saved files for completeness"
