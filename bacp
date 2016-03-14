@@ -20,16 +20,33 @@
 declare -a LabelArray # Labels require an array as they may be several words with spaces
 declare -a PathArray  # Filepaths may also have spaces
 declare -a Options    # Used by listgen to display list items
-BackTitle=" bacp : simple backup utility using cp"
 
 #
 # Functions
 #
+
+SetLanguage() {
+  dialog --clear --title " - Language - " --menu "Choose your language" 10 40 2 \
+        "English" "Englais" \
+        "Other" "Outre" 2> bacp.output
+    RetVal=$?
+    case $RetVal in
+      0) # ie: Language selected
+        Language=`cat bacp.output`
+        Language="${Language,,}" # Make lower case
+        LanguageFile="bacp.${Language}"
+        cp $LanguageFile bacp.language
+      ;;
+      *) # Catchall for <Cancel> button (1) selected (no action) or Esc
+        cp bacp.english bacp.language # Set language to English
+    esac
+}
+
 Main() { # Home screen - all paths must return here
   Quit="No"
   until [ $Quit = "Yes" ]
   do
-    dialog --backtitle "$BackTitle" --title " - Welcome - " --no-shadow --ok-button "Run" --cancel-button "Quit" --extra-button --extra-label "Settings" --yesno "\n    Welcome to the Feliz Backup Utility\n" 8 50 2> bacp.output
+    dialog --backtitle "$_Backtitle" --title " - $_Main_Title - " --no-shadow --ok-button "$_Main_Ok" --cancel-button "$_Main_Cancel" --extra-button --extra-label "$_Main_Extra" --yesno "\n    $_Main_Text\n" 8 50 2> bacp.output
     RetVal=$?
     case $RetVal in
     0) # Ok = Run
@@ -62,7 +79,7 @@ if [ ! `ls -f bacp.data` ] || [ -z $bacp.data ]; then # No data file, or empty
   until [ $Quit = "Yes" ]
   do
     # Inform user
-    dialog --title " - First - " --clear --no-shadow --msgbox "This appears to be the first time bacp has run on this machine. Before you can make any backups, you will have to set a destination device and at least one source." 10 45
+    dialog --title " - $_CDF_Title - " --clear --no-shadow --msgbox "$_CDF_Text." 10 45
     DestinationPath # Prepare list of destination devices
     # Create new data file and save destination
     echo "Destination${SetPath}" > bacp.data
@@ -70,6 +87,7 @@ if [ ! `ls -f bacp.data` ] || [ -z $bacp.data ]; then # No data file, or empty
   done
 fi
 }
+
 #
 # Settings
 #
@@ -90,7 +108,7 @@ DisplaySettings() { # Display contents of settings file
     done
     Counter=$((Counter/2)) # Number of records
     # Use $Counter and ${Options[@]} array in dialog
-    dialog --backtitle "$BackTitle" --title " - Settings - " --no-shadow --ok-button "Select" --cancel-label "Done" --extra-button --extra-label "Add" --menu "\nHere are all your current backup settings ...\nYou can <Select> one to edit or delete, or choose <Add> to add a new source." 15 65 $Counter "${Options[@]}" 2> bacp.output
+    dialog --backtitle "$_Backtitle" --title " - $_DS_Title - " --no-shadow --ok-button "$_DS_Ok" --cancel-label "$_DS_Cancel" --extra-button --extra-label "$_DS_Extra" --menu "\n$_DS_Text1 ...\n$_DS_Text2." 15 65 $Counter "${Options[@]}" 2> bacp.output
     RetVal=$?
     case $RetVal in
       0) # ie: <Ok>/<Edit> button selected - item to be edited or deleted
@@ -106,7 +124,6 @@ DisplaySettings() { # Display contents of settings file
           ItemCounter=$((ItemCounter+1))     # Record number (starting from 0)
         done
         SelectedLabel="${LabelArray[${ItemCounter}]}" # Matching label
-
         # Appropriate action dialog
         if [ $SelectedLabel = "Destination" ]; then
           # Special action dialog for Destination - only allows change
@@ -199,8 +216,8 @@ AddSource() { ## Create a new source path
         Width=$((Length+30))
       fi
     done
-    # Use $ItemCounter and ${Options[@]} array in menu dialog
-    dialog --backtitle "$BackTitle" --title " - Local files & folders - " --no-shadow --ok-button "Select" --menu "Contents of $DisplayPath\nChoose a file or folder to add to your data file.\n" 20 60 $ItemCounter "${Options[@]}" 2> bacp.output # Output file holds the line number of selection
+    #_AS1 : Use $ItemCounter and ${Options[@]} array in menu dialog
+    dialog --backtitle "$_Backtitle" --title " - $_AS1_Title - " --no-shadow --ok-button "$_AS1_Ok" --menu "$_AS1_Text1 $DisplayPath\n$_AS1_Text2.\n" 20 60 $ItemCounter "${Options[@]}" 2> bacp.output # Output file holds the line number of selection
     RetVal=$?
     # Act on button-press and item selected
     if [ $RetVal -gt 0 ]; then # <Cancel> selected
@@ -212,17 +229,17 @@ AddSource() { ## Create a new source path
         FirstLevel="Yes"
         Quit="No"
       fi
-    else ## Handling of user choice for selected directory starts here
+    else # Handling of user choice for selected directory starts here
       Output=`cat bacp.output` # This is the line number of the selected item
       Selection=`sed -n "${Output} p" path.output`   # Get the selected item from file
       Path="${DisplayPath}${Selection}"
       if [[ -d ${Path} ]]; then     # Selection is a directory
-        # Offer option to save it as a source or open to drill down
-        dialog --title " - Sources - " --clear --no-shadow --ok-label "Save" --extra-button --extra-label "Open" --yesno "Save '$Path' to your sources paths, or open it? Choose <Cancel> if you wish to do nothing." 8 60
+        # _AS2 : Offer option to save it as a source or open to drill down
+        dialog --title " - $_AS2_Title - " --clear --no-shadow --ok-label "$_AS2_Ok" --extra-button --extra-label "$_AS2_Extra" --yesno "$_AS2_Text1 '$Path' $_AS2_Text2." 8 60
         RetVal=$?
         case $RetVal in
           0) SelectedPath="$Path"   # <Ok>/<Save> option selected
-            Message="Enter a short name for this source\n(up to three or four words is best, preferably not more)"
+            Message="$_AS2_Message1\n$_AS2_Message2"
             EditLabel # Function call - enter a label - sets $SelectedLabel
             if [ -n "$SelectedLabel" ]; then
               # Save new record
@@ -240,12 +257,12 @@ AddSource() { ## Create a new source path
           *) SelectedPath="$StartPath"
             FirstLevel="Yes"
          esac
-      else # Selection is a file - save it or cancel
-        dialog --title " - Sources - " --clear --no-shadow --ok-label "Save" --yesno "Save '$Path' to your sources paths?" 10 45
+      else #_AS3 : Selection is a file - save it or cancel
+        dialog --title " - $_AS3_Title - " --clear --no-shadow --ok-label "$_AS3_Ok" --yesno "$_AS3_Text1 '$Path' $_AS3_Text2" 10 45
         RetVal=$?
         case $RetVal in
           0) SelectedPath="$Path" # <Save>
-            Message="Enter a short name for this source\n(up to three or four words is best, preferably not more)"
+            Message="$_AS3_Message1\n$_AS3_Message2"
             EditLabel # Enter a label to $SelectedLabel
             if [ -n "$SelectedLabel" ]; then
               echo "$SelectedLabel$SelectedPath/" >> bacp.data # Save new record
@@ -262,7 +279,7 @@ AddSource() { ## Create a new source path
 }
 
 EditOrDelete() {   # yes/no dialog with options to <Edit> or <Delete> using $SelectedPath & $SelectedLabel
-  dialog --title " - Edit or Delete - " --clear --no-shadow --ok-label "Edit" --extra-button --extra-label "Delete" --no-button "Cancel" --yesno "Selected path is:\n  $SelectedPath\nLabeled:\n  $SelectedLabel\nEdit the label, or delete this record?" 10 50
+  dialog --title " - $_AOD_Title - " --clear --no-shadow --ok-label "$_AOD_Ok" --extra-button --extra-label "$_AOD_Extra" --no-button "$_AOD_No" --yesno "$_AOD_Text1:\n  $SelectedPath\n$_AOD_Text2:\n  $SelectedLabel\n$_AOD_Text3" 10 50
   Action=$?
   case $Action in
   0) EditSource
@@ -275,11 +292,11 @@ EditOrDelete() {   # yes/no dialog with options to <Edit> or <Delete> using $Sel
 
 DestinationPath() { # Choose destination device
   UserName=`whoami`
-  Message="Choose a destination path for your backups."
+  Message="$_DP_Message."
   Quit="No"
   until [ $Quit = "Yes" ]
   do
-    listgen1 "External Local" " Destination " "" # Present list of all devices
+    listgen1 "$_DP_Listgen1" " $_DP_Listgen2 " "" # Present list of all devices
     Printit
     RetVal=$?
     if [ $RetVal -gt 0 ]; then # Test for <Cancel>
@@ -302,7 +319,7 @@ ListPaths() { # Display directory of $StartPath
   # When user selects one, create a new bacp.data file with device
   until [ $Quit = "Yes" ]
   do
-    listgen1 "$Browse" " Destination " "" # Present list of all devices on chosen path
+    listgen1 "$Browse" "$_LP_Listgen2" "" # Present list of all devices on chosen path
     Printit
     RetVal=$?
     if [ $RetVal -gt 0 ]; then # Test for <Cancel>
@@ -310,7 +327,7 @@ ListPaths() { # Display directory of $StartPath
       break
     else
       Picked=`cat bacp.output` # Recover the selection from listgen
-      dialog --title " - Destination - " --clear --no-shadow --yes-button "Use" --no-button "Deeper" --extra-button --extra-label "Directory" --yesno "Use device '$Picked' or select a directory from that path?" 10 45
+      dialog --title " - $_LP_Title - " --clear --no-shadow --yes-button "$_LP_Yes" --no-button "$_LP_No" --extra-button --extra-label "$_LP_Extra" --yesno "$_LP_Text1 '$Picked' $_LP_Text2" 10 45
       RetVal=$?
       case $RetVal in
       0) SetPath="${StartPath}/${Picked}/" # ie: Yes - finish with selected path
@@ -329,7 +346,7 @@ ListPaths() { # Display directory of $StartPath
 
 EditSource() {  # Edit the label of an existing source using $SelectedPath & $SelectedLabel
   # Called via EditOrDelete
-  Message="This source is currently labelled '$SelectedLabel'\nEnter a new short name for this source (up to three or four words is best, preferably not more) or <Cancel> to leave it as it is"
+  Message="$_ES_Message1 '$SelectedLabel'\n$_ES_Message2"
   EditLabel # Re-sets $SelectedLabel
   # Then assemble the new label with the path, and replace the record
   Replacement="$SelectedLabel$SelectedPath"
@@ -345,7 +362,7 @@ DeleteSource() {  # Delete an existing source using $SelectedPath & $SelectedLab
   # Get record number of selected item
   ReadRecord=`cat -n bacp.data | grep ${SelectedPath}$ | awk '{print $1}'`
   # First confirm delete
-  dialog --title " - Confirm - " --no-shadow --yesno "Are you sure you want to delete this record?" 10 45
+  dialog --title " - Confirm - " --no-shadow --yesno "$_DS_Text" 10 45
   # Then delete it
   sed -i "$ReadRecord d" bacp.data # Delete existing record
 }
@@ -360,6 +377,7 @@ EditLabel() { # Form to edit an existing or new label
   *) SelectedLabel=""
   esac
 }
+
 #
 # Listgen functions
 #
@@ -452,7 +470,7 @@ Printit() { # Display the list prepared in listgen1 or listgen2
     fi
   fi
   # Use $Counter and ${Options[@]} array in dialog
-  dialog --backtitle "$BackTitle" --title " $Title " --no-shadow --ok-button "Select" $CancelButton \
+  dialog --backtitle "$_Backtitle" --title " $Title " --no-shadow --ok-button "Select" $CancelButton \
       --menu "$Message\n" $Height $Width $Counter "${Options[@]}" 2> bacp.output
 }
 
@@ -482,7 +500,7 @@ BackupCheckList() { # A dialog checklist of saved sources.
       LineCounter=$((LineCounter+1))
     done
     # User selects from checklist
-    dialog --backtitle " - bacp : Backup Utility - " --title " - Run backup - " --no-shadow --separate-output --extra-button --extra-label "Add" --checklist "Select which items to backup using this list.\nPress SPACE to toggle an item on/off" 15 61 $LineCounter "${Options[@]}" 2> bacp.output
+    dialog --backtitle "$_Backtitle" --title " - $_BC_Title - " --no-shadow --separate-output --extra-button --extra-label "$_BC_Extra" --checklist "$_BC_Text1.\n$_BC_Text2" 15 61 $LineCounter "${Options[@]}" 2> bacp.output
     RetVal=$?
     case $RetVal in
     0) # Ok/Yes
@@ -527,7 +545,7 @@ ActionBackup() { # Retrieve items and copy sources to destination
       Count=$((Count+1))  # Increment before using, to ignore Destination
       if [ "${LabelArray[${Count}]}" = "$item" ]; then    # Item matches $LabelArray
         ItemPath=${PathArray[${Count}]}                   # Find same number in PathArray
-        dialog --backtitle "$Backtitle" --title " Information " --no-shadow --infobox "Copying $ItemPath\n" 5 55; sleep 1
+        dialog --backtitle "$_Backtitle" --title " $_AB_Title " --no-shadow --infobox "$_AB_Text $ItemPath\n" 5 55; sleep 1
         # The following code is to make sure that paths containing spaces are handled correctly
           echo $ItemPath  | sed 's/ /\\ /g' > bacp.temp.file
           ItemPath=`cat bacp.temp.file`
@@ -565,7 +583,7 @@ TestDestination() { # Checks that destination device is available
     else # If target is not turned on
       while [ -z "$Target" ] # Loop while destination is not available
       do
-        dialog --title " - Not ready - " --clear --no-shadow --yesno "The destination device appears to be turned off. Please turn it on.\nTry again?" 10 45
+        dialog --title " - $_TD_Title - " --clear --no-shadow --yesno "$_TD_Text1.\n$_TD_Text2" 10 45
         RetVal=$?
         if [ $RetVal -eq 0 ]; then  # Try again
           Target=`ls $Destination`  # Check that it is turned on
@@ -582,6 +600,13 @@ TestDestination() { # Checks that destination device is available
 #
 # Execute
 #
+
+# Check language file
+if [[ ! -f `pwd`/bacp.language ]]; then
+  SetLanguage
+fi
+source bacp.language
+
 CheckDataFile # First check if data file exists, and if not create it
 Main # Home screen - all paths must return here
 
