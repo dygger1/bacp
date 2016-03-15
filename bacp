@@ -72,19 +72,35 @@ Main() { # Home screen - all paths must return here
 #
 # Data file handling ...
 #
-CheckDataFile() {  # First check if data file exists
-if [ ! `ls -f bacp.data` ] || [ -z $bacp.data ]; then # No data file, or empty
+CheckDataFile() { # First check if data file exists
+if [[ -f `pwd`/bacp.data ]]; then # If exists, check contents
+  DataFileContents=`cat bacp.data`
+  if [ -z $DataFileContents ]; then # Delete if empty
+    rm bacp.data
+  fi
+fi
+if [[ ! -f `pwd`/bacp.data ]]; then
+# if [ ! `ls -f bacp.data` ]; then # No data file, or empty
   NewDataFile="Yes"
   Quit="No"
   until [ $Quit = "Yes" ]
   do
     # Inform user
-    dialog --backtitle "$_Backtitle" --title " - $_CDF_Title - " --clear --no-shadow --msgbox "$_CDF_Text." 10 45
-    DestinationPath # Prepare list of destination devices
-    # Create new data file and save destination
-    echo "Destination${SetPath}" > bacp.data
-    AddSource # Add a source path and label
-    Quit="Yes"
+    dialog --backtitle "$_Backtitle" --title " - $_CDF_Title - " --clear --no-shadow --msgbox "$_CDF_Text.\n$_Quit" 10 45
+    RetVal=$?
+    case $RetVal in
+      0) DestinationPath # Prepare list of destination devices
+      # Create new data file and save destination
+      if [ ${SetPath} = "Invalid" ]; then
+        Quit="No"
+      else
+        echo "Destination${SetPath}" > bacp.data
+        AddSource # Add a source path and label
+        Quit="Yes"
+      fi
+      ;;
+      *) exit # Allow for [Esc]
+    esac
   done
 fi
 }
@@ -294,29 +310,42 @@ EditOrDelete() {   # yes/no dialog with options to <Edit> or <Delete> using $Sel
 DestinationPath() { # Choose whether to use an external device or a local one
   # Called by CheckDataFile and EditDestination
   UserName=`whoami`
-  Message="$_DP_Message."
   Quit="No"
+  # Prepare numbered list in local language
+  Options=()
+  Options[1]="1"
+  Options[2]=`echo $_DP_Listgen1 | awk '{print $1}'`
+  Options[3]="2"
+  Options[4]=`echo $_DP_Listgen1 | awk '{print $2}'`
   until [ $Quit = "Yes" ]
   do
-    listgen1 "$_DP_Listgen1" " $_DP_Listgen2 " "" # External or Local
-    Printit
-    RetVal=$?
+    dialog --backtitle "$_Backtitle" --title " - $_DP_Listgen2 - " --no-shadow --ok-button "$_AS1_Ok" --cancel-label "$_AOD_No" --menu "$_DP_Message." 10 50 2 "${Options[@]}" 2> bacp.output
+    RetVal=$? # 1 = External, 2 = Local
     if [ $RetVal -gt 0 ]; then # <Cancel>
-      Quit="Yes"
+      SetPath="Invalid"
       break
     else
       Selection=`cat bacp.output`   # Recover the selection from listgen output file
       case $Selection in            # Use it to set the startpath
-      "Local") StartPath="/home/$UserName"
+      2) StartPath="/home/$UserName"
       ;;
-      *) StartPath="/media/$UserName"
+      1) StartPath="/media/$UserName"
+        if [ -z `ls ${StartPath}` ]; then
+          SetPath="Invalid"
+          dialog --backtitle "$_Backtitle" --title " - $_TD_Title - " --clear --no-shadow --msgbox "$_TD_Text1" 8 45
+          break
+        fi
+      ;;
+      *) SetPath="Invalid" # Cannot proceed without destination
+        dialog --backtitle "$_Backtitle" --title " - $_TD_Title - " --clear --no-shadow --msgbox "$_TD_Text1" 8 45
+        break
       esac
     fi
     ListPaths  # Use contents of $StartPath to list available paths on either external or local device
   done
 }
 
-ListPaths() { # Display directory of $StartPath
+ListPaths() { # Display directory of chosen local or external device
   Browse=`ls $StartPath/` # Save directory listing
   until [ $Quit = "Yes" ] # When user selects one, create a new bacp.data file with device
   do
@@ -335,7 +364,8 @@ ListPaths() { # Display directory of $StartPath
         Quit="Yes"
         ;;
       1) # Cancel button
-        Quit="Yes"
+        SetPath="Invalid"
+        break
         ;;
       *) # ie: No - offer directories until done
         StartPath="${StartPath}/${Picked}/"

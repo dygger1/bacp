@@ -10,6 +10,7 @@
 # or which sets variables used to call listgen
 
 _Backtitle="Bacp : A simple backup utility"
+_Quit="([Esc] to quit)"
 
 # Main()
 _Main_Title="Welcome"
