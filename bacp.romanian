@@ -23,7 +23,7 @@ _Main_Text="Bine ați venit la utilitarul de back-up Bacp"
 
 # CheckDataFile()
 _CDF_Title="Prima dată"
-_CDF_Text="This appears to be the first time bacp has run on this machine. Before you can make any backups, you will have to set a destination device and at least one source"
+_CDF_Text="Aceasta pare a fi prima dată cand rulați bacp pe acest calculator. Înainte de a putea face backup-uri trebui să setați un dispozitiv pentru destinație și cel putțin o sursă"
 
 # DisplaySettings()
 _DS_Title="Setări"
@@ -51,7 +51,7 @@ _AS3_Title="Surse"
 _AS3_Ok="Salvează"
 _AS3_Text1="Salvează"
 _AS3_Text2="to your sources paths?"
-_AS3_Message1="Enter a short name for this source"
+_AS3_Message1="Introduceți un nume scurt pentru această sursă"
 _AS3_Message2="(până la trei sau patru cuvinte este cel mai bine, de preferință nu mai mult)"
 
 # EditOrDelete()
@@ -90,14 +90,14 @@ _EL_Title="Surse"
 # BackupChecklist()
 _BC_Title="Ruleaza backup-ul"
 _BC_Extra="Adaugă"
-_BC_Text1="Select which items to backup using this list"
-_BC_Text2="Press SPACE to toggle an item on/off"
+_BC_Text1="Selectați itemele pentru back-up folosind această listă"
+_BC_Text2="Apăsați SPACE pentru a bifa/debifa un item"
 
 # ActionBackup()
 _AB_Title="Informații"
 _AB_Text="Copiere"
 
 # TestDestination()
-_TD_Title="Not ready"
-_TD_Text1="The destination device appears to be turned off. Please turn it on"
+_TD_Title="Nu este gata"
+_TD_Text1="Dispozitivul destinație pare a fi oprit. Vă rugăm să-l porniți"
 _TD_Text2="Încercați din nou?"
