@@ -1,11 +1,8 @@
-# 							
-# Romanian Translation File		
+#
+# Romanian Translation File
 # ------------------------
 # Tradus de xxvirusxx
 # 14 Martie 2016
-#
-# Translated by xxvirusxx
-# 14 March 2016
 #
 
 # All translation variables begin with an underscore
@@ -13,6 +10,8 @@
 # or which sets variables used to call listgen
 
 _Backtitle="Bacp : Un simplu utilitar de back-up"
+_Quit="([Esc] to quit)"    ##
+_Destination="Destination" ##
 
 # Main()
 _Main_Title="Bine ați venit"
@@ -82,6 +81,7 @@ _ES_Message1="This source is currently labelled"
 _ES_Message2="Introduceți un nume scurt pentru această sursă (până la trei sau patru cuvinte este cel mai bine, de preferință nu mai mult) sau <Anulează> pentru a lăsa așa cum este"
 
 # DeleteSource()
+_DeleteSource_Title="Confirm" ##
 _DS_Text="Sigur doriți să ștergeți această înregistrare?"
 
 # EditLabel()
@@ -101,3 +101,8 @@ _AB_Text="Copiere"
 _TD_Title="Not ready"
 _TD_Text1="The destination device appears to be turned off. Please turn it on"
 _TD_Text2="Încercați din nou?"
+
+# Finished ##
+_Finished_Title="Finished" ##
+_Finished_Text1="Finished, but with errors. Check bacp.error.file" ##
+_Finished_Text2="Finished backup. It is always wise to check the saved files for completeness" ##
