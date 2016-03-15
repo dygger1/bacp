@@ -1,0 +1,103 @@
+# 							
+# Romanian Translation File		
+# ------------------------
+# Tradus de xxvirusxx
+# 14 Martie 2016
+#
+# Translated by xxvirusxx
+# 14 March 2016
+#
+
+# All translation variables begin with an underscore
+# Grouped by each function that contains a dialog
+# or which sets variables used to call listgen
+
+_Backtitle="Bacp : Un simplu utilitar de back-up"
+
+# Main()
+_Main_Title="Bine ați venit"
+_Main_Ok="Rulează"
+_Main_Cancel="Ieșire"
+_Main_Extra="Setări"
+_Main_Text="Bine ați venit la utilitarul de back-up Bacp"
+
+# CheckDataFile()
+_CDF_Title="Prima dată"
+_CDF_Text="This appears to be the first time bacp has run on this machine. Before you can make any backups, you will have to set a destination device and at least one source"
+
+# DisplaySettings()
+_DS_Title="Setări"
+_DS_Ok="Selectează"
+_DS_Cancel="Gata"
+_DS_Extra="Adaugă"
+_DS_Text1="Aici sunt toate setările curente de back-up"
+_DS_Text2="Puteți <Selecta> una pentru a edita sau șterge, sau alegeți <Adaugă> pentru a adăuga o nouă sursă"
+
+# AddSource()
+_AS1_Title="Fișiere locale și foldere"
+_AS1_Ok="Selectează"
+_AS1_Text1="Conținutul lui"
+_AS1_Text2="Choose a file or folder to add to your data file"
+
+_AS2_Title="Surse"
+_AS2_Ok="Salvează"
+_AS2_Extra="Deschide"
+_AS2_Text1="Salvează"
+_AS2_Text2="to your sources paths, or open it? Alegeți <Anulează> dacă doriți să nu faceți nimic"
+_AS2_Message1="Introduceți un nume scurt pentru această sursă"
+_AS2_Message2="(până la trei sau patru cuvinte este cel mai bine, de preferință nu mai mult)"
+
+_AS3_Title="Surse"
+_AS3_Ok="Salvează"
+_AS3_Text1="Salvează"
+_AS3_Text2="to your sources paths?"
+_AS3_Message1="Enter a short name for this source"
+_AS3_Message2="(până la trei sau patru cuvinte este cel mai bine, de preferință nu mai mult)"
+
+# EditOrDelete()
+_AOD_Title="Editează sau Șterge"
+_AOD_Ok="Editează"
+_AOD_No="Anulează"
+_AOD_Extra="Șterge"
+_AOD_Text1="Calea selectată este"
+_AOD_Text2="Labeled"
+_AOD_Text3="Edit the label, or delete this record?"
+
+# DestinationPath()
+_DP_Message="Alege o cale de destinație pentru back-up"
+_DP_Listgen1="External Local"
+_DP_Listgen2="Destinație"
+
+# ListPaths()
+_LP_Listgen2="Destinație"
+_LP_Title="Destinație"
+_LP_Yes="Folosește"
+_LP_No="Deschide"
+_LP_Extra="Director"
+_LP_Text1="Folosește dispozitivul"
+_LP_Text2="sau selectați un director din această cale?""
+
+# EditSource()
+_ES_Message1="This source is currently labelled"
+_ES_Message2="Introduceți un nume scurt pentru această sursă (până la trei sau patru cuvinte este cel mai bine, de preferință nu mai mult) sau <Anulează> pentru a lăsa așa cum este"
+
+# DeleteSource()
+_DS_Text="Sigur doriți să ștergeți această înregistrare?"
+
+# EditLabel()
+_EL_Title="Surse"
+
+# BackupChecklist()
+_BC_Title="Ruleaza backup-ul"
+_BC_Extra="Adaugă"
+_BC_Text1="Select which items to backup using this list"
+_BC_Text2="Press SPACE to toggle an item on/off"
+
+# ActionBackup()
+_AB_Title="Informații"
+_AB_Text="Copiere"
+
+# TestDestination()
+_TD_Title="Not ready"
+_TD_Text1="The destination device appears to be turned off. Please turn it on"
+_TD_Text2="Încercați din nou?"

@@ -11,6 +11,7 @@
 
 _Backtitle="Bacp : A simple backup utility"
 _Quit="([Esc] to quit)"
+_Destination="Destination"
 
 # Main()
 _Main_Title="Welcome"

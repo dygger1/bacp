@@ -1,0 +1,108 @@
+#
+# Serbian Translation File
+# ------------------------
+# Written by Đorđe Radojković
+# 14 March 2016
+#
+
+# All translation variables begin with an underscore
+# Grouped by each function that contains a dialog
+# or which sets variables used to call listgen
+
+_Backtitle="Bacp : Jednostavan alat za back-up"
+_Quit="([Esc] da biste izasli)"
+_Destination="Destinacija"
+
+# Main()
+_Main_Title="Dobrodošli"
+_Main_Ok="Pokreni"
+_Main_Cancel="Izađi"
+_Main_Extra="Podešavanja"
+_Main_Text="Dobrodošli u Bacp alat za back-up"
+
+# CheckDataFile()
+_CDF_Title="Početna podešavanja"
+_CDF_Text="Izgleda da je ovo prvi put da pokrećete bacp na ovoj mašini. Pre nego što napravite back-up, moraćete da podesite destinaciju i bar jedan izvor fajlova"
+
+# DisplaySettings()
+_DS_Title="Podešavanja"
+_DS_Ok="Izaberi"
+_DS_Cancel="Završeno"
+_DS_Extra="Dodaj"
+_DS_Text1="Ovde su sva vaša trenutna podešavanja za back-up"
+_DS_Text2="Možete izabrati nešto da izmenite ili obrišete. \n  izaberite <Dodaj> da bi dodali novi izvor"
+
+# AddSource()
+_AS1_Title="Lokalne datoteke i direktorijumi"
+_AS1_Ok="Izaberi"
+_AS1_Text1="Sadržaj"
+_AS1_Text2="Izaberite izvorne datoteke ili direktorijume da dodate u vaše podatke"
+
+_AS2_Title="Izvori"
+_AS2_Ok="Sačuvaj"
+_AS2_Extra="Otvori"
+_AS2_Text1="Sačuvaj"
+_AS2_Text2="u svoje izvorne putanje, ili otvori? Izaberite <Izađi> ako ne želite ništa da uradite"
+_AS2_Message1="Unesite kratko ime za izvor"
+_AS2_Message2="(do tri ili četiri reči, ne više)"
+
+_AS3_Title="Izvori"
+_AS3_Ok="Sačuvaj"
+_AS3_Text1="Sačuvaj"
+_AS3_Text2="u svoje izvorne putanje?"
+_AS3_Message1="Unesti kratko ime za ovaj izvor"
+_AS3_Message2="(do tri ili četiri reči, ne više)"
+
+# EditOrDelete()
+_AOD_Title="Promeni ili Obriši"
+_AOD_Ok="Promeni"
+_AOD_No="Otkaži"
+_AOD_Extra="Obriši"
+_AOD_Text1="Izabrana putanja je"
+_AOD_Text2="Označeno"
+_AOD_Text3="Izmenite oznaku, ili obrišite zapis?"
+
+# DestinationPath()
+_DP_Message="Izaberite putanju destinacije za vaš back-up"
+_DP_Listgen1="Eksterni Lokalni"
+_DP_Listgen2="Destinacija"
+
+# ListPaths()
+_LP_Listgen2="Destinacija"
+_LP_Title="Destinacija"
+_LP_Yes="Koristi"
+_LP_No="Otvori"
+_LP_Extra="Direktorijum"
+_LP_Text1="Koristi uređaj"
+_LP_Text2="ili izaberi direktorijum na toj putanji?"
+
+# EditSource()
+_ES_Message1="Ovaj izvor je trenutno označen"
+_ES_Message2="Unesite novo kratko ime za ovaj izvor (do tri ili četiri reči, ne više) ili <Otkaži> da bi ostavili sadašnje"
+
+# DeleteSource()
+_DeleteSource_Title="Potvrdi"
+_DeleteSource_Text="Jeste li sigurni da želite da obrišete ovaj izvor?"
+
+# EditLabel()
+_EL_Title="Izvori"
+
+# BackupChecklist()
+_BC_Title="Pokreni back-up"
+_BC_Extra="Dodaj"
+_BC_Text1="Izaberite šta želite da backup-ujete koristeći listu"
+_BC_Text2="Pritisnite SPACE da označite(izaberete)/skinete oznaku sa datoteke"
+
+# ActionBackup()
+_AB_Title="Informacije"
+_AB_Text="Kopiranje"
+
+# TestDestination()
+_TD_Title="Nije spremno"
+_TD_Text1="Izgleda da je destinacioni uređaj ugašen. Molimo vas upalite ga"
+_TD_Text2="Pokušajte ponovo?"
+
+# Finished
+_Finished_Title="Završeno"
+_Finished_Text1="Završeno, ali sa greškama. Proverite bacp.error.file"
+_Finished_Text2="Završen back-up. Bilo bi pametno da proverite sačuvane datoteke radi tačnosti"
