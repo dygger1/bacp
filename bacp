@@ -29,6 +29,7 @@ SetLanguage() { # User selects language, which is then fixed
   dialog --clear --backtitle "$_Backtitle" --title " - Language - " --menu "Choose your language" 10 40 2 \
         "English" "English" \
         "French" "Francais" \
+        "Polish" "Polski" \
         "Romanian" "Română" \
         "Serbian" "Srpski" 2> bacp.output
     RetVal=$?
@@ -81,21 +82,21 @@ BackOut() { # Exit
 #
 CheckDataFile() { # First check if data file exists
   if [[ -f `pwd`/bacp.data ]]; then      # If file exists, check contents
-    DataFileContents=`wc -c bacp.data | cut -c 1-2`
+    DataFileContents=`wc -c bacp.data | cut -c 1-2` # Count bytes
     if [ $DataFileContents -eq 0 ]; then # Empty
       rm bacp.data                       # Delete if empty
-      AddDataFile                        # Then add a destination
-    else                                                    # Not empty
-      HasDestination=`cat bacp.data | grep ${_Destination}` # Contains keyword
-      HasSlash=`cat bacp.data | grep ${_Destination}/`      # Contains keyword and slash
+      AddDataFile                        # Then create a file
+    else                                                     # Not empty
+      HasDestination=`cat bacp.data | grep ${_Destination}`  # Contains keyword
+      HasSlash=`cat bacp.data | grep ${_Destination}/media/` # Contains keyword and slash
       LengthHasDestination=`echo $HasDestination | wc -c | cut -c 1-3` # Get length
       LengthDestinationWord=`echo $_Destination | wc -c | cut -c 1-3`  # From language file
       LengthDifference=$((LengthHasDestination-LengthDestinationWord)) # Compare
-      if [ $LengthHasDestination -eq 0 ]; then                   # If no destination
+      if [ $LengthHasDestination -eq 0 ]; then               # If no destination
         AddDataFile
-      elif [ -z $HasSlash ] || [ $LengthDifference -gt 0 ]; then # Line is corrupted
-        sed -i '1d' bacp.data                                    # Delete corrupted line
-        AddDestination                                           # Then add a new one
+      elif [ -z $HasSlash ]; then                            # Line is incomplete
+        sed -i '1d' bacp.data                                # Delete corrupted line
+        AddDestination                                       # Then add a new one
       fi
     fi
   else # No data file
@@ -137,7 +138,7 @@ AddDataFile() {
         Quit="Yes"
       fi
       ;;
-      *) BackOut # Allow for [Esc]
+      *) BackOut  # Allow for [Esc]
     esac
   done
 }
@@ -679,4 +680,3 @@ source bacp.language
 
 CheckDataFile # First check if data file exists, and if not create it
 Main # Home screen - all paths must return here
-

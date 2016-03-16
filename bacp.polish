@@ -1,0 +1,108 @@
+#
+# Polish Translation File
+# ------------------------
+#
+# Translated to Polish by pavroo
+# 15 March 2016
+
+# All translation variables begin with an underscore
+# Grouped by each function that contains a dialog
+# or which sets variables used to call listgen
+
+_Backtitle="Bacp : Proste narzędzie do tworzenia kopii zapasowej"
+_Quit="([Esc] aby przerwać)"
+_Destination="Cel"
+
+# Main()
+_Main_Title="Witaj"
+_Main_Ok="Uruchom"
+_Main_Cancel="Zakończ"
+_Main_Extra="Ustawienia"
+_Main_Text="Witaj w programie Bacp Backup Utility"
+
+# CheckDataFile()
+_CDF_Title="Pierwsze"
+_CDF_Text="Wygląda na to, że będzie to pierwszy backup wykonany na tej maszynie. Zanim rozpoczniesz tworzeni kopii zapasowej, musisz wybrać urządzenie docelowe oraz minimum jedno urządzenie źródłowe"
+
+# DisplaySettings()
+_DS_Title="Ustawienia"
+_DS_Ok="Wybierz"
+_DS_Cancel="Zrobione"
+_DS_Extra="Dodaj"
+_DS_Text1="Twoje bieżące ustawienia dla kopii zapasowej"
+_DS_Text2="<Wybierz> aby edytować lub usunąć, lub <Dodaj> aby dodać nowe źródło"
+
+# AddSource()
+_AS1_Title="Lokalne pliki & foldery"
+_AS1_Ok="Wybierz"
+_AS1_Text1="Zawartość"
+_AS1_Text2="Wybierz pliki lub foldery źródłowe by dodać je do swoich plików"
+
+_AS2_Title="Źródła"
+_AS2_Ok="Zapisz"
+_AS2_Extra="Otwórz"
+_AS2_Text1="Zapisać"
+_AS2_Text2="do swoich źródeł, czy otworzyć? Wybierz <Anuluj> jeśli nic nie chcesz zrobić"
+_AS2_Message1="Wpisz krótką nazwę dla tego źródła"
+_AS2_Message2="(najlepiej trzy do czterech słów)"
+
+_AS3_Title="Źródła"
+_AS3_Ok="Zapisz"
+_AS3_Text1="Zapisać"
+_AS3_Text2="do ścieżek Twoich źródeł?"
+_AS3_Message1="Wpisz krótką nazwę dla tego źródła"
+_AS3_Message2="(najlepiej trzy do czterech słów)"
+
+# EditOrDelete()
+_AOD_Title="Edycja lub Usunięcie"
+_AOD_Ok="Edycja"
+_AOD_No="Anuluj"
+_AOD_Extra="Usuń"
+_AOD_Text1="Wybrana ścieżka to"
+_AOD_Text2="Oznaczona"
+_AOD_Text3="Edytować oznaczone lub usunąć ten wpis?"
+
+# DestinationPath()
+_DP_Message="Wybierz ścieżkę docelową dla swojej kopii"
+_DP_Listgen1="Zewnętrzny nośnik"
+_DP_Listgen2="Cel"
+
+# ListPaths()
+_LP_Listgen2="Cel"
+_LP_Title="Cel"
+_LP_Yes="Użyj"
+_LP_No="Otwórz"
+_LP_Extra="Katalog"
+_LP_Text1="Użyć urządzenie"
+_LP_Text2="lub wybrać katalog ze ścieżki?"
+
+# EditSource()
+_ES_Message1="To źródło jest już oznaczone"
+_ES_Message2="Wpisz krótką nazwę dla tego źródła (najlepiej trzy do czterech słów) lub <Anuluj> aby pozostawić tak jak jest"
+
+# DeleteSource()
+_DeleteSource_Title="Potwierdź"
+_DeleteSource_Text="Jesteś pewny, że chcesz usunąć ten wpis?"
+
+# EditLabel()
+_EL_Title="Źródła"
+
+# BackupChecklist()
+_BC_Title="Rozpocznij tworzenie kopii"
+_BC_Extra="Dodaj"
+_BC_Text1="Wybierz which items to backup using this list"
+_BC_Text2="Wciśnij SPACJĘ aby przełączyć tę pozycję na on/off"
+
+# ActionBackup()
+_AB_Title="Informacja"
+_AB_Text="Kopiowanie"
+
+# TestDestination()
+_TD_Title="Nie jest gotowe"
+_TD_Text1="Urządzenie docelowe wydaje się być wyłączone. Proszę je włączyć"
+_TD_Text2="Spróbować ponownie?"
+
+# Finished
+_Finished_Title="Zakończono"
+_Finished_Text1="Zakończono, lecz z błędami. Sprawdź plik bacp.error.file"
+_Finished_Text2="Zakończono tworzenie kopii. Dobrze jest sprawdzić czy zapisane pliki są kompletne."
