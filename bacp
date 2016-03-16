@@ -26,7 +26,7 @@ declare -a Options    # Used by listgen to display list items
 #
 
 SetLanguage() { # User selects language, which is then fixed
-  dialog --clear --backtitle "$_Backtitle" --title " - Language - " --menu "Choose your language" 10 40 2 \
+  dialog --clear --backtitle "$_Backtitle" --title " - Language - " --menu "Choose your language" 15 40 5 \
         "English" "English" \
         "French" "Francais" \
         "Polish" "Polski" \
@@ -113,7 +113,7 @@ AddDestination() {
     if [ ${SetPath} = "Invalid" ]; then # If backed out
       Quit="No"
     else                                # Save destination to first line
-      sed -i '1i ${_Destination}${SetPath}' bacp.data
+      sed -i "1i ${_Destination}${SetPath}" bacp.data
       Quit="Yes"
     fi
   done
