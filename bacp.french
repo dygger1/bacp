@@ -1,0 +1,107 @@
+#
+# Fichier de Translation en Francais
+# ------------------------
+# Edité par Hammami Oussama
+# 14 Mars 2016
+#
+
+# All translation variables begin with an underscore
+# Grouped by each function that contains a dialog
+# or which sets variables used to call listgen
+
+_Backtitle="Bacp : Un simple outil de Sauvegarde"
+
+# Main()
+_Main_Title="Bonjour"
+_Main_Ok="Executer"
+_Main_Cancel="Quitter"
+_Main_Extra="Parametres"
+_Main_Text="Bienvenu dans l'ulteraire de Sauvegarde Bacp"
+
+# CheckDataFile()
+_CDF_Title="Premierement"
+_CDF_Text="Ceci semble etre la premiere fois que bacp ait tourné dans cette machine. Avant de faire une quelconque sauvegarde, veuillez indiquer le dispositif destinataire ainsi qu'une source(au minimum)"
+
+# DisplaySettings()
+_DS_Title="Parametres"
+_DS_Ok="Selectionner"
+_DS_Cancel="Terminer"
+_DS_Extra="Ajouter"
+_DS_Text1="Ceci sont tous vos parametres"
+_DS_Text2="Vous pouvez <Selectionner> un pour editer/supprimer, ou choisir <Ajouter> pour ajouter une nouvelle source"
+
+# AddSource()
+_AS1_Title="Fichier et Dossier Locaux"
+_AS1_Ok="Selectionner"
+_AS1_Text1="Contenu de"
+_AS1_Text2="Selectionnez un fichier/dossier à ajouter à votre fichier de données"
+
+_AS2_Title="Sources"
+_AS2_Ok="Sauvegarder"
+_AS2_Extra="Ouvrir"
+_AS2_Text1="Sauvegarder"
+_AS2_Text2="vers votre/vos chemin(s) de source(s), or l'ouvrir? choisissez <Quitter> si vous ne voulez rien faire"
+_AS2_Message1="Entrez un court nom pour cette source"
+_AS2_Message2="(max trois ou quatre mots, de preferance pas plus)"
+
+_AS3_Title="Sources"
+_AS3_Ok="Sauvegarder"
+_AS3_Text1="Sauvegarder"
+_AS3_Text2="vers votre chemin de destination?"
+_AS3_Message1="Entrez un court nom pour cette source"
+_AS3_Message2="(max trois ou quatre mots, de preferance pas plus)"
+
+# EditOrDelete()
+_AOD_Title="Editer ou Effacer"
+_AOD_Ok="Editer"
+_AOD_No="Quitter"
+_AOD_Extra="Effacer"
+_AOD_Text1="Le chemin selectionné est"
+_AOD_Text2="Marquer"
+_AOD_Text3="Editer l'etiquette, ou effacer l'enregistrement"
+
+# DestinationPath()
+_DP_Message="Choisissez un chemin de destination pour vos sauvegardes"
+_DP_Listgen1="Localisation Externe"
+_DP_Listgen2="Destination"
+
+# ListPaths()
+_LP_Listgen2="Destination"
+_LP_Title="Destination"
+_LP_Yes="Utilisez"
+_LP_No="Ouvrir"
+_LP_Extra="Dossier"
+_LP_Text1="Utiliser dispositif"
+_LP_Text2="ou selectionner un dossier de ce chemin?"
+
+# EditSource()
+_ES_Message1="Cette source est actuellement marqué"
+_ES_Message2="Entrez une (court)nouveau nom pour cette source (max trois ou quatre caracteres de preferance) ou <Quitter> pour la laisser comme tel"
+
+# DeleteSource()
+_DeleteSource_Title="Confirmer"
+_DeleteSource_Text="Etes-vous sur de vouloir supprimer cette sauvegarde?"
+
+
+# EditLabel()
+_EL_Title="Sources"
+
+# BackupChecklist()
+_BC_Title="Commencer la sauvegarde"
+_BC_Extra="Ajouter"
+_BC_Text1="Selectionnez quels elements à sauvegarder en utilisant cette liste"
+_BC_Text2="Tapez ESPACE pour selectionner/deselectionner un element"
+
+# ActionBackup()
+_AB_Title="Information"
+_AB_Text="Copie.."
+
+# TestDestination()
+_TD_Title="Pas encore pret"
+_TD_Text1="le dispositif de destination semble avoir été deconnecté. Veuillez le reconnecter pour continuer"
+_TD_Text2="Essayer encore une fois?"
+
+# Finished
+_Finished_Title="Terminé"
+_Finished_Text1="C'est terminé, mais des erreurs ont eu lieu, consultez bacp.error.file pour plus d'informations"
+_Finished_Text2="C'est terminé, mais c'est toujours plus sage de consulter la sauvegarde pour s'en assurer"
