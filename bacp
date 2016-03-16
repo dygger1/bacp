@@ -28,6 +28,7 @@ declare -a Options    # Used by listgen to display list items
 SetLanguage() { # User selects language, which is then fixed
   dialog --clear --backtitle "$_Backtitle" --title " - Language - " --menu "Choose your language" 10 40 2 \
         "English" "English" \
+        "French" "Francais" \
         "Romanian" "Română" \
         "Serbian" "Srpski" 2> bacp.output
     RetVal=$?
@@ -70,7 +71,7 @@ Main() { # Home screen - all paths must return here
   done
 }
 
-BackOut() {
+BackOut() { # Exit
   echo -e '\0033\0143'
   exit
 }
@@ -79,28 +80,59 @@ BackOut() {
 # Data file handling ...
 #
 CheckDataFile() { # First check if data file exists
-if [[ -f `pwd`/bacp.data ]]; then # If exists, check contents
-  DataFileContents=`cat bacp.data`
-  if [ -z $DataFileContents ]; then # Delete if empty
-    rm bacp.data
+  if [[ -f `pwd`/bacp.data ]]; then      # If file exists, check contents
+    DataFileContents=`wc -c bacp.data | cut -c 1-2`
+    if [ $DataFileContents -eq 0 ]; then # Empty
+      rm bacp.data                       # Delete if empty
+      AddDataFile                        # Then add a destination
+    else                                                    # Not empty
+      HasDestination=`cat bacp.data | grep ${_Destination}` # Contains keyword
+      HasSlash=`cat bacp.data | grep ${_Destination}/`      # Contains keyword and slash
+      LengthHasDestination=`echo $HasDestination | wc -c | cut -c 1-3` # Get length
+      LengthDestinationWord=`echo $_Destination | wc -c | cut -c 1-3`  # From language file
+      LengthDifference=$((LengthHasDestination-LengthDestinationWord)) # Compare
+      if [ $LengthHasDestination -eq 0 ]; then                   # If no destination
+        AddDataFile
+      elif [ -z $HasSlash ] || [ $LengthDifference -gt 0 ]; then # Line is corrupted
+        sed -i '1d' bacp.data                                    # Delete corrupted line
+        AddDestination                                           # Then add a new one
+      fi
+    fi
+  else # No data file
+    AddDataFile
   fi
-fi
-if [[ ! -f `pwd`/bacp.data ]]; then
-# if [ ! `ls -f bacp.data` ]; then # No data file, or empty
+}
+
+AddDestination() {
+  NewDataFile="No"
+  Quit="No"
+  until [ $Quit = "Yes" ]
+  do
+    SetDestinationPath # Prepare list of destination devices
+    if [ ${SetPath} = "Invalid" ]; then # If backed out
+      Quit="No"
+    else                                # Save destination to first line
+      sed -i '1i ${_Destination}${SetPath}' bacp.data
+      Quit="Yes"
+    fi
+  done
+}
+
+AddDataFile() {
   NewDataFile="Yes"
   Quit="No"
   until [ $Quit = "Yes" ]
   do
     # Inform user
-    dialog --backtitle "$_Backtitle" --title " - $_CDF_Title - " --clear --no-shadow --msgbox "$_CDF_Text.\n$_Quit" 10 45
+    dialog --backtitle "$_Backtitle" --title " - $_CDF_Title - " --clear --no-shadow --msgbox "$_CDF_Text.\n\n$_Quit" 12 50
     RetVal=$?
     case $RetVal in
-      0) DestinationPath # Prepare list of destination devices
+      0) SetDestinationPath # Prepare list of destination devices
       # Create new data file and save destination
       if [ ${SetPath} = "Invalid" ]; then
         Quit="No"
       else
-        echo "Destination${SetPath}" > bacp.data
+        echo "${_Destination}${SetPath}" > bacp.data
         AddSource # Add a source path and label
         Quit="Yes"
       fi
@@ -108,7 +140,6 @@ if [[ ! -f `pwd`/bacp.data ]]; then
       *) BackOut # Allow for [Esc]
     esac
   done
-fi
 }
 
 #
@@ -148,7 +179,7 @@ DisplaySettings() { # Display contents of settings file
         done
         SelectedLabel="${LabelArray[${ItemCounter}]}" # Matching label
         # Appropriate action dialog
-        if [ $SelectedLabel = "Destination" ]; then
+        if [ $SelectedLabel = "${_Destination}" ]; then
           # Special action dialog for Destination - only allows change
           NewDataFile="No"
           EditDestination
@@ -199,10 +230,10 @@ OpenDataFile() { # Extract existing settings file into arrays
 
 EditDestination() { # Edit existing destination
   # Build a list of available devices
-  Existing=`cat bacp.data | grep Destination`
-  DestinationPath # Prepare list of devices
+  Existing=`cat bacp.data | grep ${_Destination}`
+  SetDestinationPath # Prepare list of devices
   # On return of $SetPath, overwrite the existing entry in bacp.data file
-  sed -i "/Destination/ c\Destination${SetPath}" bacp.data
+  sed -i "/${_Destination}/ c\${_Destination}${SetPath}" bacp.data
 }
 
 AddSource() { ## Create a new source path
@@ -217,14 +248,14 @@ AddSource() { ## Create a new source path
   do
     # Prepare array of long labels
     HowMany=`cat -n path.output | awk '{print $1}' | tail -c -3` # Count items in selected directory
-    PathArray=()                                                 # Clear the array ready for new list
+    PathArray=()                                                 # Clear PathArray ready for new list
     Count=1
-    until [ $Count -gt $HowMany ] # Iterate through new listing
+    until [ $Count -gt $HowMany ]
     do
-      PathArray[${Count}]=`sed -n "$Count p" path.output`        # Copy each item to array
+      PathArray[${Count}]=`sed -n "$Count p" path.output`        # Copy each item to PathArray
       Count=$((Count+1))
     done
-    # Prepare $Options array for dialog menu
+    # Prepare $Options array for dialog menu using PathArray
     Counter=1
     ItemCounter=1
     Width=50
@@ -240,7 +271,8 @@ AddSource() { ## Create a new source path
       fi
     done
     #_AS1 : Use $ItemCounter and ${Options[@]} array in menu dialog
-    dialog --backtitle "$_Backtitle" --title " - $_AS1_Title - " --no-shadow --ok-button "$_AS1_Ok" --menu "$_AS1_Text1 $DisplayPath\n$_AS1_Text2.\n" 20 60 $ItemCounter "${Options[@]}" 2> bacp.output # Output file holds the line number of selection
+    dialog --backtitle "$_Backtitle" --title " - $_AS1_Title - " --no-shadow --ok-button "$_AS1_Ok" --menu "$_AS1_Text1 $DisplayPath\n$_AS1_Text2.\n" 20 60 $ItemCounter "${Options[@]}" 2> bacp.output
+    # Output file holds the line number of selection
     RetVal=$?
     # Act on button-press and item selected
     if [ $RetVal -gt 0 ]; then # <Cancel> selected
@@ -253,10 +285,10 @@ AddSource() { ## Create a new source path
         Quit="No"
       fi
     else # Handling of user choice for selected directory starts here
-      Output=`cat bacp.output` # This is the line number of the selected item
+      Output=`cat bacp.output`                       # Line number of the selected item
       Selection=`sed -n "${Output} p" path.output`   # Get the selected item from file
       Path="${DisplayPath}${Selection}"
-      if [[ -d ${Path} ]]; then     # Selection is a directory
+      if [[ -d ${Path} ]]; then                      # Selection is a directory
         # _AS2 : Offer option to save it as a source or open to drill down
         dialog --backtitle "$_Backtitle" --title " - $_AS2_Title - " --clear --no-shadow --ok-label "$_AS2_Ok" --extra-button --extra-label "$_AS2_Extra" --yesno "$_AS2_Text1 '$Path' $_AS2_Text2." 8 60
         RetVal=$?
@@ -313,7 +345,7 @@ EditOrDelete() {   # yes/no dialog with options to <Edit> or <Delete> using $Sel
   esac
 }
 
-DestinationPath() { # Choose whether to use an external device or a local one
+SetDestinationPath() { # Choose whether to use an external device or a local one
   # Called by CheckDataFile and EditDestination
   UserName=`whoami`
   Quit="No"
@@ -325,18 +357,19 @@ DestinationPath() { # Choose whether to use an external device or a local one
   Options[4]=`echo $_DP_Listgen1 | awk '{print $2}'`
   until [ $Quit = "Yes" ]
   do
+    # Display short list of device options
     dialog --backtitle "$_Backtitle" --title " - $_DP_Listgen2 - " --no-shadow --ok-button "$_AS1_Ok" --cancel-label "$_AOD_No" --menu "$_DP_Message." 10 50 2 "${Options[@]}" 2> bacp.output
-    RetVal=$? # 1 = External, 2 = Local
+    RetVal=$?                  # 1 = External, 2 = Local
     if [ $RetVal -gt 0 ]; then # <Cancel>
       SetPath="Invalid"
       break
     else
-      Selection=`cat bacp.output`   # Recover the selection from listgen output file
-      case $Selection in            # Use it to set the startpath
-      2) StartPath="/home/$UserName"
+      Selection=`cat bacp.output`      # Recover the selection from listgen output file
+      case $Selection in
+      2) StartPath="/home/$UserName"   # Set local startpath
       ;;
-      1) StartPath="/media/$UserName"
-        if [ -z `ls ${StartPath}` ]; then
+      1) StartPath="/media/$UserName"       # Set external startpath
+        if [ -z `ls ${StartPath}` ]; then   # Test external startpath
           SetPath="Invalid"
           dialog --backtitle "$_Backtitle" --title " - $_TD_Title - " --clear --no-shadow --msgbox "$_TD_Text1" 8 45
           break
@@ -526,7 +559,7 @@ BackupCheckList() { # A dialog checklist of saved sources.
     # Prepare Options array for dialog checklist
     while [ $LineCounter -lt $HowMany ]
     do
-      if [ "${LabelArray[${LineCounter}]}" != "Destination" ]; then
+      if [ "${LabelArray[${LineCounter}]}" != "${_Destination}" ]; then
         Options[${Counter}]="${LabelArray[${LineCounter}]}"
         Counter=$((Counter+1))
         Options[${Counter}]=""
@@ -588,7 +621,7 @@ ActionBackup() { # Retrieve items and copy sources to destination
           ItemPath=`cat bacp.temp.file`
           rm bacp.temp.file # Tidy up
         # Then proceed to copy
-        cp -r $ItemPath $Destination$Today/ 2>> bacp.error.file
+        cp -r $ItemPath ${DestinationPath}${Today}/ 2>> bacp.error.file
         break
       fi
     done
@@ -606,13 +639,13 @@ TestDestination() { # Checks that destination device is available
   Quit="No"
   until [ $Quit = "Yes" ]
   do
-    Destination=`cat bacp.data | grep Destination | awk '{print $1}' | cut -c 12-`
-    Target=`ls $Destination`  # Check that it is turned on
+    DestinationPath=`cat bacp.data | grep Destination | awk '{print $1}' | cut -c 12-`
+    Target=`ls $DestinationPath`  # Check that it is turned on
     if [ -n "$Target" ]; then # Target is turned on
       Today=`date +%Y:%m:%d:%k:%M` # Today's date and time
-      Target1=`ls $Destination | grep ${Today}` # Check for existing backup
+      Target1=`ls $DestinationPath | grep ${Today}` # Check for existing backup
       if [ -z "$Target1" ]; then  # If no existing dated directory
-        mkdir $Destination$Today  # Make dated directory on destination device
+        mkdir ${DestinationPath}${Today}  # Make dated directory on destination device
       fi
       Target="Yes" # Set flags
       Quit="Yes"
@@ -623,7 +656,7 @@ TestDestination() { # Checks that destination device is available
         dialog --backtitle "$_Backtitle" --title " - $_TD_Title - " --clear --no-shadow --yesno "$_TD_Text1.\n$_TD_Text2" 10 45
         RetVal=$?
         if [ $RetVal -eq 0 ]; then  # Try again
-          Target=`ls $Destination`  # Check that it is turned on
+          Target=`ls ${DestinationPath}`  # Check that it is turned on
         else
           Target=""
           Quit="Yes"
