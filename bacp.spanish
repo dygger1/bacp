@@ -1,0 +1,106 @@
+#
+# traducción Espanhol
+# -------------------
+# Traducción por Ike Santos
+# N.º 18 de marzo de, el año 2016
+
+# Todas las variables de traducción comienzan con un guión
+# División por cada función que contiene un cuadro de diálogo
+# O que define las variables utilizadas para llamar listgen
+
+_Backtitle="BACP: Una utilidad de copia de seguridad simple"
+_Quit="([Esc] para salir)"
+_Destination="Destino"
+
+# Main()
+_Main_Title="Bienvenido"
+_Main_Ok="Ejecutar"
+_Main_Cancel="Salir"
+_Main_Extra="Configuración"
+_Main_Text="Bienvenido a la copia de seguridad BACP Utilidad"
+
+# CheckDataFile()
+_CDF_Title="Primera"
+_CDF_Text="Esta parece ser la primera vez bacp se ejecutan en esta máquina. Antes de hacer cualquier copia de seguridad, tiene que establecer un dispositivo de destino y al menos una fuente"
+
+# DisplaySettings()
+_DS_Title="Configuración"
+_DS_Ok="Seleccionar"
+_DS_Cancel="Añadir"
+_DS_Text1="Aquí están todos los ajustes actuales de copia de seguridad"
+_DS_Text2="Puede <Seleccionar> uno de editar o borrar o seleccione <Añadir> para añadir una nueva fuente"
+
+# Addsource()
+_AS1_Title="Los archivos y carpetas locales"
+_AS1_Ok="Seleccionar"
+_AS1_Text1="Contenido"
+_AS1_Text2="Elija los archivos de origen o carpetas para añadir a su archivo de datos"
+
+_AS2_Title="Fuentes"
+_AS2_Ok="Guardar"
+_AS2_Extra="Público"
+_AS2_Text1="Guardar"
+_AS2_Text2="En sus rutas de las fuentes, o abrirlo? Elija <Cancelar> si no quiere hacer nada"
+_AS2_Message1="Por favor, introduzca un nombre corto para esta fuente"
+_AS2_Message2="(Hasta tres o cuatro palabras, preferiblemente no más)"
+
+_AS3_Title="Fuentes"
+_AS3_Ok="Guardar"
+_AS3_Text1="Guardar"
+_AS3_Text2="En sus rutas de las fuentes?"
+_AS3_Message1="Por favor, introduzca un nombre corto para esta fuente"
+_AS3_Message2="(Hasta tres o cuatro palabras es mejor, preferiblemente no más)"
+
+# EditOrDelete()
+_AOD_Title="Editar o eliminar"
+_AOD_Ok="Editar"
+_AOD_No="Cancelar"
+_AOD_Extra="Borrar"
+_AOD_Text1="Ruta seleccionada es"
+_AOD_Text2="Marcado"
+_AOD_Text3="Editar la etiqueta, o eliminar este registro?"
+
+# DestinationPath()
+_DP_Message="Seleccione una ruta de destino para las copias de seguridad"
+_DP_Listgen1="Sitio externo"
+_DP_Listgen2="Destino"
+
+# ListPaths()
+_LP_Listgen2="Destino"
+_LP_Title="Destino"
+_LP_Yes="Uso"
+_LP_No="Público"
+_LP_Extra="Directorio"
+_LP_Text1="Utilizar el dispositivo"
+_LP_Text2="O seleccionar un directorio de ese camino?"
+
+#EditSource()
+_ES_Message1="Esta fuente tiene la etiqueta"
+_ES_Message2="Introduzca un nuevo nombre corto para esta fuente (hasta tres o cuatro palabras son las mejores, preferiblemente no más) o <Cancelar> para dejarlo como está"
+
+# DeleteSource()
+_DeleteSource_Title="Confirmar"
+_DeleteSource_Text="¿Está seguro que desea eliminar este registro?"
+
+# EditLabel()
+_EL_Title="Fuentes"
+
+# BackupChecklist()
+_BC_Title="Ejecutar copia de seguridad"
+_BC_Extra="Añadir"
+_BC_Text1="Seleccione los elementos que desea copia de seguridad utilizando esta lista"
+_BC_Text2="Pulse espaciador para marcar un elemento de encendido / apagado"
+
+# ActionBackup()
+_AB_Title="Información"
+_AB_Text="Copia"
+
+# TestDestination()
+_TD_Title="No está listo"
+_TD_Text1="El dispositivo de destino parece estar apagado. Por favor, encenderlo"
+_TD_Text2="Intentarlo de nuevo?"
+
+# Completado
+_Finished_Title="Hecho"
+_Finished_Text1="Listo pero con errores. Compruebe bacp.error.file"
+_Finished_Text2="Copia de seguridad acabado. Siempre es recomendable comprobar los archivos guardados por la totalidad"

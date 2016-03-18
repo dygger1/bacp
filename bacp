@@ -26,11 +26,13 @@ declare -a Options    # Used by listgen to display list items
 #
 
 SetLanguage() { # User selects language, which is then fixed
-  dialog --clear --backtitle "$_Backtitle" --title " - Language - " --menu "Choose your language" 15 40 5 \
+  dialog --clear --backtitle "$_Backtitle" --title " - Language - " --menu "Choose your language" 15 40 7 \
         "English" "English" \
         "French" "Francais" \
         "Polish" "Polski" \
+        "Portuguese" "Português" \
         "Romanian" "Română" \
+        "Spanish" "Espanhol" \
         "Serbian" "Srpski" 2> bacp.output
     RetVal=$?
     case $RetVal in
@@ -363,6 +365,7 @@ SetDestinationPath() { # Choose whether to use an external device or a local one
     RetVal=$?                  # 1 = External, 2 = Local
     if [ $RetVal -gt 0 ]; then # <Cancel>
       SetPath="Invalid"
+      Quit="Yes"
       break
     else
       Selection=`cat bacp.output`      # Recover the selection from listgen output file

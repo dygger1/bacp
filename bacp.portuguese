@@ -1,0 +1,108 @@
+#
+# Traduçao Portugal
+# -----------------
+# Traduçao por Ike Santos
+# 17 de março de 2016
+#
+
+# Todas as variáveis ​​de tradução começam com um sublinhado
+# Agrupados por cada função que contém uma caixa de diálogo
+# Ou que define as variáveis ​​usadas para chamar listgen
+
+_Backtitle="BACP: Um utilitário de backup simples"
+_Quit="([Esc] para sair)"
+_Destination="Destino"
+
+# Main()
+_Main_Title="Bem Vindo"
+_Main_Ok="Run"
+_Main_Cancel="Sair"
+_Main_Extra="Configurações"
+_Main_Text="Bem-vindo ao backup BACP Utility"
+
+# CheckDataFile()
+_CDF_Title="Primeiro"
+_CDF_Text="Esta parece ser a primeira vez bacp foi executado nesta máquina. Antes de fazer quaisquer cópias de segurança, você terá que definir um dispositivo de destino e pelo menos uma fonte"
+
+# DisplaySettings()
+_DS_Title="Configurações"
+_DS_Ok="Selecionar"
+_DS_Cancel="Feito"
+_DS_Extra="Adicionar"
+_DS_Text1="Aqui estão todas as suas configurações de backup atuais"
+_DS_Text2="Você pode <Select> um para editar ou apagar ou escolha <Adicionar> para adicionar uma nova fonte"
+
+# AddSource()
+_AS1_Title="Arquivos e pastas locais"
+_AS1_Ok="Selecionar"
+_AS1_Text1="Conteúdo"
+_AS1_Text2="Escolher arquivos de origem ou pastas para adicionar ao seu arquivo de dados"
+
+_AS2_Title="Fontes"
+_AS2_Ok="Salvar"
+_AS2_Extra="Abrir"
+_AS2_Text1="Salvar"
+_AS2_Text2="Às suas fontes de caminhos, ou abri-lo? Escolha <Cancel>, se você nao desejar fazer nada"
+_AS2_Message1="Digite um nome curto para esta fonte"
+_AS2_Message2="(Até três ou quatro palavras, de preferência não mais)"
+
+_AS3_Title="Fontes"
+_AS3_Ok="Salvar"
+_AS3_Text1="Salvar"
+_AS3_Text2="Às suas fontes de caminhos?"
+_AS3_Message1="Digite um nome curto para esta fonte"
+_AS3_Message2="(Até três ou quatro palavras é melhor, de preferência não mais)"
+
+# EditOrDelete()
+_AOD_Title="Editar ou excluir"
+_AOD_Ok="Editar"
+_AOD_No="Cancelar"
+_AOD_Extra="Excluir"
+_AOD_Text1="Caminho selecionado é"
+_AOD_Text2="Rotuladas"
+_AOD_Text3="Editar o rótulo, ou excluir este registro?"
+
+# DestinationPath()
+_DP_Message="Escolha um caminho de destino para os seus backups"
+_DP_Listgen1="Local Externo"
+_DP_Listgen2="Destino"
+
+# ListPaths()
+_LP_Listgen2="Destino"
+_LP_Title="Destino"
+_LP_Yes="Usar"
+_LP_No="Abrir"
+_LP_Extra="Directorio"
+_LP_Text1="Use o dispositivo"
+_LP_Text2="Ou selecionar um diretório desse caminho?"
+
+# EditSource()
+_ES_Message1="Essa fonte está rotulada"
+_ES_Message2="Digite um novo nome curto para essa fonte (até três ou quatro palavras é o melhor, de preferência, não mais) ou <Cancel> para deixá-lo como ele está"
+
+# DeleteSource()
+_DeleteSource_Title="Confirmar"
+_DeleteSource_Text="Tem certeza de que deseja excluir este registro?"
+
+# EditLabel()
+_EL_Title="Fontes"
+
+# BackupChecklist()
+_BC_Title="Executar backup"
+_BC_Extra="Adicionar"
+_BC_Text1="Selecione quais itens para backup usando esta lista"
+_BC_Text2="Pressione SPACE para alternar um item on / off"
+
+# ActionBackup()
+_AB_Title="Informações"
+_AB_Text="Copiar"
+
+# TestDestination()
+_TD_Title="Ainda não está pronto"
+_TD_Text1="O dispositivo de destino parece estar desligado. Por favor, ligue-o"
+_TD_Text2="Tente de novo?"
+
+# Terminado
+_Finished_Title="Concluído"
+_Finished_Text1="Concluído, mas com erros. Verifique bacp.error.file"
+_Finished_Text2="Backup finalizado. É sempre aconselhável verificar os arquivos salvos para a completude"

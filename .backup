@@ -1,0 +1,4 @@
+#!/bin/bash
+
+UserName=`whoami`
+cd /home/$UserName/scripts && ./bacp

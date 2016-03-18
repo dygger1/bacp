@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# This script will copy all bacp files to a working directory
+# And will create a launching script in user path
+
+# From download folder ...
+
+# 1) Create folder in user home directory
+      UserName=`whoami`
+      mkdir /home/$UserName/scripts
+
+# 2) Copy all bacp files to that folder
+      cp bacp* /home/$UserName/scripts
+
+# 3) Get first PATH item
+      PATHPath=`echo $PATH | cut -d : -f 1`
+
+# 4) Copy the calling script onto that path
+      sudo cp .backup $PATHPath/backup
+
+# 5) Make it available
+      sudo chmod +x $PATHPath/backup
+
+
+# 5) Run bacp from anywhere
+#     backup
