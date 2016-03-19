@@ -21,10 +21,17 @@ declare -a LabelArray # Labels require an array as they may be several words wit
 declare -a PathArray  # Filepaths may also have spaces
 declare -a Options    # Used by listgen to display list items
 
-#
-# Functions
-#
+# -------------------------
+# Functions Group      Line
+# -------------------------
+# Opening               35
+# Data file handling    90
+# Operational          464
+# Listgen functions    587
 
+#
+# Opening - language, main and backout
+#
 SetLanguage() { # User selects language, which is then fixed
   dialog --clear --backtitle "$_Backtitle" --title " - Language - " --menu "Choose your language" 15 40 7 \
         "English" "English" \
@@ -68,85 +75,19 @@ Main() { # Home screen - all paths must return here
         Quit="No"
      ;;
     *) # No/Cancel/Esc = Quit
-       rm bacp.output # Tidy up
       BackOut
     esac
   done
 }
 
 BackOut() { # Exit
+  rm bacp.output # Tidy up
   echo -e '\0033\0143'
   exit
 }
 
 #
-# Data file handling ...
-#
-CheckDataFile() { # First check if data file exists
-  if [[ -f `pwd`/bacp.data ]]; then      # If file exists, check contents
-    DataFileContents=`wc -c bacp.data | cut -c 1-2` # Count bytes
-    if [ $DataFileContents -eq 0 ]; then # Empty
-      rm bacp.data                       # Delete if empty
-      AddDataFile                        # Then create a file
-    else                                                     # Not empty
-      HasDestination=`cat bacp.data | grep ${_Destination}`  # Contains keyword
-      HasSlash=`cat bacp.data | grep ${_Destination}/media/` # Contains keyword and slash
-      LengthHasDestination=`echo $HasDestination | wc -c | cut -c 1-3` # Get length
-      LengthDestinationWord=`echo $_Destination | wc -c | cut -c 1-3`  # From language file
-      LengthDifference=$((LengthHasDestination-LengthDestinationWord)) # Compare
-      if [ $LengthHasDestination -eq 0 ]; then               # If no destination
-        AddDataFile
-      elif [ -z $HasSlash ]; then                            # Line is incomplete
-        sed -i '1d' bacp.data                                # Delete corrupted line
-        AddDestination                                       # Then add a new one
-      fi
-    fi
-  else # No data file
-    AddDataFile
-  fi
-}
-
-AddDestination() {
-  NewDataFile="No"
-  Quit="No"
-  until [ $Quit = "Yes" ]
-  do
-    SetDestinationPath # Prepare list of destination devices
-    if [ ${SetPath} = "Invalid" ]; then # If backed out
-      Quit="No"
-    else                                # Save destination to first line
-      sed -i "1i ${_Destination}${SetPath}" bacp.data
-      Quit="Yes"
-    fi
-  done
-}
-
-AddDataFile() {
-  NewDataFile="Yes"
-  Quit="No"
-  until [ $Quit = "Yes" ]
-  do
-    # Inform user
-    dialog --backtitle "$_Backtitle" --title " - $_CDF_Title - " --clear --no-shadow --msgbox "$_CDF_Text.\n\n$_Quit" 12 50
-    RetVal=$?
-    case $RetVal in
-      0) SetDestinationPath # Prepare list of destination devices
-      # Create new data file and save destination
-      if [ ${SetPath} = "Invalid" ]; then
-        Quit="No"
-      else
-        echo "${_Destination}${SetPath}" > bacp.data
-        AddSource # Add a source path and label
-        Quit="Yes"
-      fi
-      ;;
-      *) BackOut  # Allow for [Esc]
-    esac
-  done
-}
-
-#
-# Settings
+# Data file handling - check, display and edit
 #
 DisplaySettings() { # Display contents of settings file
   OpenDataFile  # Call function to get existing settings
@@ -229,6 +170,69 @@ OpenDataFile() { # Extract existing settings file into arrays
     FilePath=`echo ${ItemsArray[${Count}]} | cut -c ${LengthOfLabel}-`
     PathArray[${Count}]="$FilePath" # Save to array
     }
+}
+
+CheckDataFile() { # First check if data file exists
+  if [[ -f `pwd`/bacp.data ]]; then      # If file exists, check contents
+    DataFileContents=`wc -c bacp.data | cut -c 1-2` # Count bytes
+    if [ $DataFileContents -eq 0 ]; then # Empty
+      rm bacp.data                       # Delete if empty
+      AddDataFile                        # Then create a file
+    else                                                     # Not empty
+      HasDestination=`cat bacp.data | grep ${_Destination}`  # Contains keyword
+      HasSlash=`cat bacp.data | grep ${_Destination}/media/` # Contains keyword and slash
+      LengthHasDestination=`echo $HasDestination | wc -c | cut -c 1-3` # Get length
+      LengthDestinationWord=`echo $_Destination | wc -c | cut -c 1-3`  # From language file
+      LengthDifference=$((LengthHasDestination-LengthDestinationWord)) # Compare
+      if [ $LengthHasDestination -eq 0 ]; then               # If no destination
+        AddDataFile
+      elif [ -z $HasSlash ]; then                            # Line is incomplete
+        sed -i '1d' bacp.data                                # Delete corrupted line
+        AddDestination                                       # Then add a new one
+      fi
+    fi
+  else # No data file
+    AddDataFile
+  fi
+}
+
+AddDestination() {
+  NewDataFile="No"
+  Quit="No"
+  until [ $Quit = "Yes" ]
+  do
+    SetDestinationPath # Prepare list of destination devices
+    if [ ${SetPath} = "Invalid" ]; then # If backed out
+      Quit="Yes"
+    else                                # Save destination to first line
+      sed -i "1i ${_Destination}${SetPath}" bacp.data
+      Quit="Yes"
+    fi
+  done
+}
+
+AddDataFile() {
+  NewDataFile="Yes"
+  Quit="No"
+  until [ $Quit = "Yes" ]
+  do
+    # Inform user
+    dialog --backtitle "$_Backtitle" --title " - $_CDF_Title - " --clear --no-shadow --msgbox "$_CDF_Text.\n\n$_Quit" 12 50
+    RetVal=$?
+    case $RetVal in
+      0) SetDestinationPath # Prepare list of destination devices
+      # Create new data file and save destination
+      if [ ${SetPath} = "Invalid" ]; then
+        Quit="No"
+      else
+        echo "${_Destination}${SetPath}" > bacp.data
+        AddSource # Add a source path and label
+        Quit="Yes"
+      fi
+      ;;
+      *) BackOut  # Allow for [Esc]
+    esac
+  done
 }
 
 EditDestination() { # Edit existing destination
@@ -453,102 +457,6 @@ EditLabel() { # Form to edit an existing or new label
 }
 
 #
-# Listgen functions
-#
-listgen1() { # Prepare single-column list
-  Title="$2"
-  if [ $3 ]; then
-    case $3 in
-      "nocancel") CancelButton="--nocancel"
-      ;;
-      *) CancelButton="--cancel-label $3"
-    esac
-  else
-    CancelButton=""
-  fi
-  Counter=0
-  Options=() # Clear listgen array
-  if [ ! $Width ]; then
-    Width=40
-  fi
-  # Prepare $1 for dialog menu
-  for item in $1 # Prepare string array of list items passed as $1
-  do
-    Counter=$((Counter+1))
-    Options[${Counter}]="$item"
-    Counter=$((Counter+1))
-    Options[${Counter}]="-"
-    Length=`echo ${#item}`
-    if [ $Length -gt $Width ]; then
-      Width=$((Length+20))
-    fi
-  done
-  NoTag="--no-tag"
-}
-
-listgen2() { # Prepare dual-column list
-  Title="$2"
-  if [ $3 ]; then
-    case $3 in
-      "nocancel") CancelButton="--nocancel"
-      ;;
-      "add") CancelButton="--help-button --help-label Add"
-      ;;
-      *) CancelButton="--cancel-label $3"
-    esac
-  else
-    CancelButton=""
-  fi
-  Options=() # Clear listgen array
-  Counter=0
-  for item in $1; do
-    Items[${Counter}]=$item
-    Counter=$((Counter+1))
-  done
-  Counter=0
-  ItemCounter=0
-  # Import the complex array
-  name=$4[@]
-  LongName=("${!name}")
-  if [ ! $Width ]; then
-    Width=50
-  fi
-  # Prepare $1 and $4 for dialog menu
-  for item in "${LongName[@]}"; do
-    Options[$((Counter))]="${Items[${ItemCounter}]}"
-    Options[$((Counter+1))]="$item"
-    Counter=$((Counter+2))
-    ItemCounter=$((ItemCounter+1))
-    Length=`echo ${#item}`
-    if [ $Length -gt $Width ]; then
-      Width=$((Length+30))
-    fi
-  done
-  NoTag=""
-}
-
-Printit() { # Display the list prepared in listgen1 or listgen2
-  Counter=$((Counter/2))
-  # Calculate number of lines
-  echo $Message > listgen.output
-  countcharacters=`cat listgen.output | wc -c`  # Count number of characters in $Message
-  countlines=$((countcharacters/Width)) # Calculate lines
-  echo $Message | sed 's/[^\\]//g' > bacp.output   # Use sed to remove all except newlines
-  countnewlines=`cat listgen.output | wc -c` # Count newline characters
-  Height=$((countlines+countnewlines+Counter+16-Counter))
-  rm listgen.output
-  if [ $Height -gt 19 ]; then
-    Height=19
-    if [ $Width -lt 50 ]; then
-      Width=$((Width+10))
-    fi
-  fi
-  # Use $Counter and ${Options[@]} array in dialog
-  dialog --backtitle "$_Backtitle" --title " $Title " --no-shadow --ok-button "Select" $CancelButton \
-      --menu "$Message\n" $Height $Width $Counter "${Options[@]}" 2> bacp.output
-}
-
-#
 # Operational
 #
 BackupCheckList() { # A dialog checklist of saved sources.
@@ -672,14 +580,108 @@ TestDestination() { # Checks that destination device is available
 }
 
 #
+# Listgen functions
+#
+listgen1() { # Prepare single-column list
+  Title="$2"
+  if [ $3 ]; then
+    case $3 in
+      "nocancel") CancelButton="--nocancel"
+      ;;
+      *) CancelButton="--cancel-label $3"
+    esac
+  else
+    CancelButton=""
+  fi
+  Counter=0
+  Options=() # Clear listgen array
+  if [ ! $Width ]; then
+    Width=40
+  fi
+  # Prepare $1 for dialog menu
+  for item in $1 # Prepare string array of list items passed as $1
+  do
+    Counter=$((Counter+1))
+    Options[${Counter}]="$item"
+    Counter=$((Counter+1))
+    Options[${Counter}]="-"
+    Length=`echo ${#item}`
+    if [ $Length -gt $Width ]; then
+      Width=$((Length+20))
+    fi
+  done
+  NoTag="--no-tag"
+}
+
+listgen2() { # Prepare dual-column list
+  Title="$2"
+  if [ $3 ]; then
+    case $3 in
+      "nocancel") CancelButton="--nocancel"
+      ;;
+      "add") CancelButton="--help-button --help-label Add"
+      ;;
+      *) CancelButton="--cancel-label $3"
+    esac
+  else
+    CancelButton=""
+  fi
+  Options=() # Clear listgen array
+  Counter=0
+  for item in $1; do
+    Items[${Counter}]=$item
+    Counter=$((Counter+1))
+  done
+  Counter=0
+  ItemCounter=0
+  # Import the complex array
+  name=$4[@]
+  LongName=("${!name}")
+  if [ ! $Width ]; then
+    Width=50
+  fi
+  # Prepare $1 and $4 for dialog menu
+  for item in "${LongName[@]}"; do
+    Options[$((Counter))]="${Items[${ItemCounter}]}"
+    Options[$((Counter+1))]="$item"
+    Counter=$((Counter+2))
+    ItemCounter=$((ItemCounter+1))
+    Length=`echo ${#item}`
+    if [ $Length -gt $Width ]; then
+      Width=$((Length+30))
+    fi
+  done
+  NoTag=""
+}
+
+Printit() { # Display the list prepared in listgen1 or listgen2
+  Counter=$((Counter/2))
+  # Calculate number of lines
+  echo $Message > listgen.output
+  countcharacters=`cat listgen.output | wc -c`  # Count number of characters in $Message
+  countlines=$((countcharacters/Width)) # Calculate lines
+  echo $Message | sed 's/[^\\]//g' > bacp.output   # Use sed to remove all except newlines
+  countnewlines=`cat listgen.output | wc -c` # Count newline characters
+  Height=$((countlines+countnewlines+Counter+16-Counter))
+  rm listgen.output
+  if [ $Height -gt 19 ]; then
+    Height=19
+    if [ $Width -lt 50 ]; then
+      Width=$((Width+10))
+    fi
+  fi
+  # Use $Counter and ${Options[@]} array in dialog
+  dialog --backtitle "$_Backtitle" --title " $Title " --no-shadow --ok-button "Select" $CancelButton \
+      --menu "$Message\n" $Height $Width $Counter "${Options[@]}" 2> bacp.output
+}
+
+#
 # Execute
 #
 
-# Check language file
-if [[ ! -f `pwd`/bacp.language ]]; then
+if [[ ! -f `pwd`/bacp.language ]]; then # Check language file
   SetLanguage
 fi
 source bacp.language
 
-CheckDataFile # First check if data file exists, and if not create it
 Main # Home screen - all paths must return here
