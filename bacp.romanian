@@ -102,7 +102,7 @@ _TD_Title="Nu este gata"
 _TD_Text1="Dispozitivul destinație pare a fi oprit. Vă rugăm să-l porniți"
 _TD_Text2="Încercați din nou?"
 
-# Finished ##
+# Finished
 _Finished_Title="Terminat"
 _Finished_Text1="Terminat, dar cu erori. Verificați fișierul bacp.error.file"
 _Finished_Text2="Back-up terminat. It is always wise to check the saved files for completeness"
