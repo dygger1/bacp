@@ -10,8 +10,8 @@
 # or which sets variables used to call listgen
 
 _Backtitle="Bacp : Un simplu utilitar de back-up"
-_Quit="([Esc] to quit)"    ##
-_Destination="Destination" ##
+_Quit="([Esc] pentru a ieși)"
+_Destination="Destinație"
 
 # Main()
 _Main_Title="Bine ați venit"
@@ -22,7 +22,7 @@ _Main_Text="Bine ați venit la utilitarul de back-up Bacp"
 
 # CheckDataFile()
 _CDF_Title="Prima dată"
-_CDF_Text="This appears to be the first time bacp has run on this machine. Before you can make any backups, you will have to set a destination device and at least one source"
+_CDF_Text="Aceasta pare a fi prima dată cand rulați bacp pe acest calculator. Înainte de a putea face backup-uri trebui să setați un dispozitiv pentru destinație și cel putțin o sursă"
 
 # DisplaySettings()
 _DS_Title="Setări"
@@ -36,21 +36,21 @@ _DS_Text2="Puteți <Selecta> una pentru a edita sau șterge, sau alegeți <Adaug
 _AS1_Title="Fișiere locale și foldere"
 _AS1_Ok="Selectează"
 _AS1_Text1="Conținutul lui"
-_AS1_Text2="Choose a file or folder to add to your data file"
+_AS1_Text2="Alegeți un fișier sau director pentru a-l adăuga la fișierul de date"
 
 _AS2_Title="Surse"
 _AS2_Ok="Salvează"
 _AS2_Extra="Deschide"
 _AS2_Text1="Salvează"
-_AS2_Text2="to your sources paths, or open it? Alegeți <Anulează> dacă doriți să nu faceți nimic"
+_AS2_Text2="la căile sursă, sau deschideți? Alegeți <Anulează> dacă doriți să nu faceți nimic"
 _AS2_Message1="Introduceți un nume scurt pentru această sursă"
 _AS2_Message2="(până la trei sau patru cuvinte este cel mai bine, de preferință nu mai mult)"
 
 _AS3_Title="Surse"
 _AS3_Ok="Salvează"
 _AS3_Text1="Salvează"
-_AS3_Text2="to your sources paths?"
-_AS3_Message1="Enter a short name for this source"
+_AS3_Text2="la căile sursă?"
+_AS3_Message1="Introduceți un nume scurt pentru această sursă"
 _AS3_Message2="(până la trei sau patru cuvinte este cel mai bine, de preferință nu mai mult)"
 
 # EditOrDelete()
@@ -59,8 +59,8 @@ _AOD_Ok="Editează"
 _AOD_No="Anulează"
 _AOD_Extra="Șterge"
 _AOD_Text1="Calea selectată este"
-_AOD_Text2="Labeled"
-_AOD_Text3="Edit the label, or delete this record?"
+_AOD_Text2="Etichetat"
+_AOD_Text3="Editați eticheta, sau ștergeți această înregistrare?"
 
 # DestinationPath()
 _DP_Message="Alege o cale de destinație pentru back-up"
@@ -77,11 +77,11 @@ _LP_Text1="Folosește dispozitivul"
 _LP_Text2="sau selectați un director din această cale?""
 
 # EditSource()
-_ES_Message1="This source is currently labelled"
+_ES_Message1="Această sursă este în prezent etichetată"
 _ES_Message2="Introduceți un nume scurt pentru această sursă (până la trei sau patru cuvinte este cel mai bine, de preferință nu mai mult) sau <Anulează> pentru a lăsa așa cum este"
 
 # DeleteSource()
-_DeleteSource_Title="Confirm" ##
+_DeleteSource_Title="Confirmare"
 _DS_Text="Sigur doriți să ștergeți această înregistrare?"
 
 # EditLabel()
@@ -90,19 +90,19 @@ _EL_Title="Surse"
 # BackupChecklist()
 _BC_Title="Ruleaza backup-ul"
 _BC_Extra="Adaugă"
-_BC_Text1="Select which items to backup using this list"
-_BC_Text2="Press SPACE to toggle an item on/off"
+_BC_Text1="Selectați itemele pentru back-up folosind această listă"
+_BC_Text2="Apăsați SPACE pentru a bifa/debifa un item"
 
 # ActionBackup()
 _AB_Title="Informații"
 _AB_Text="Copiere"
 
 # TestDestination()
-_TD_Title="Not ready"
-_TD_Text1="The destination device appears to be turned off. Please turn it on"
+_TD_Title="Nu este gata"
+_TD_Text1="Dispozitivul destinație pare a fi oprit. Vă rugăm să-l porniți"
 _TD_Text2="Încercați din nou?"
 
 # Finished ##
-_Finished_Title="Finished" ##
-_Finished_Text1="Finished, but with errors. Check bacp.error.file" ##
-_Finished_Text2="Finished backup. It is always wise to check the saved files for completeness" ##
+_Finished_Title="Terminat"
+_Finished_Text1="Terminat, dar cu erori. Verificați fișierul bacp.error.file"
+_Finished_Text2="Back-up terminat. It is always wise to check the saved files for completeness"
