@@ -1,0 +1,107 @@
+#
+# Fil innehålllande svensk översättning för bacp
+# ------------------------
+# Redigerad av Mathias Heinel
+# 18 Mars 2016
+
+# Alla översätttningsvariabler börjar med ett understreck
+# Grupperat efter varje funktion som innehåller dialogtext
+# eller som sätter variabelvärde som används för att anropa listgen
+
+_Backtitle="Bacp : En enkel säkerhetskopieringsfunktion"
+_Quit="([Esc] för att avsluta)"
+_Destination="Destination"
+
+# Main()
+_Main_Title="Välkommen"
+_Main_Ok="Kör"
+_Main_Cancel="Avsluta"
+_Main_Extra="Inställningar"
+_Main_Text="Välkommen till Bacp-programmet"
+
+# CheckDataFile()
+_CDF_Title="Först"
+_CDF_Text="Det här verkar vara första gången som bacp körs på den här maskinen. Innan du kan göra en säkerhetskopia måste du ange en destinationssökväg för och åt minstone en källfil"
+
+# DisplaySettings()
+_DS_Title="Inställningar"
+_DS_Ok="Välj"
+_DS_Cancel="Klar"
+_DS_Extra="Lägg till"
+_DS_Text1="Här är alla dina nuvarande inställningar"
+_DS_Text2="Du kan med <Välja> en för att ändra eller radera, eller välja  <Lägg till> för att lägga till en ny sökväg"
+
+# AddSource()
+_AS1_Title="Lokala filer och kataloger"
+_AS1_Ok="Välj"
+_AS1_Text1="Innehåll hos"
+_AS1_Text2="Väl källfiler eller kataloger att spara till säkerhetskopian"
+
+_AS2_Title="Källor"
+_AS2_Ok="Spara"
+_AS2_Extra="Öppna"
+_AS2_Text1="Spara"
+_AS2_Text2="till dina källsökvägar, eller öppna den? Välj <Avbryt> om du inte vill avbryta"
+_AS2_Message1="Ange ett kort namn för den här källan"
+_AS2_Message2="(upp till tre eller fyra ord går bra helst inte längre)"
+
+_AS3_Title="Källor"
+_AS3_Ok="Spara"
+_AS3_Text1="Spara"
+_AS3_Text2="till dina källsökvägar?"
+_AS3_Message1="Ange ett kort namn för den här källan"
+_AS3_Message2="(upp till tre eller fyra ord går bra helst inte längre)"
+
+# EditOrDelete()
+_AOD_Title="Ändra eller Radera"
+_AOD_Ok="Ändra"
+_AOD_No="Avbryt"
+_AOD_Extra="Radera"
+_AOD_Text1="Vald sökväg är"
+_AOD_Text2="Märkt"
+_AOD_Text3="Ändra märkningen, eller radera den här raden?"
+
+# DestinationPath()
+_DP_Message="Ange destinationssökväg för säkerhetskopian"
+_DP_Listgen1="Extern Lokal"
+_DP_Listgen2="Destination"
+
+# ListPaths()
+_LP_Listgen2="Destination"
+_LP_Title="Destination"
+_LP_Yes="Använd"
+_LP_No="Öppna"
+_LP_Extra="Bibliotek"
+_LP_Text1="Använd enhet"
+_LP_Text2="eller välj bibliotek ifrån sökvägen?"
+
+# EditSource()
+_ES_Message1="Den här sökvägen har nuvarande märkning"
+_ES_Message2="Ange ett kort namn för den här källan (upp till tre eller fyra ord går bra helst inte längre) eller <Avbryt> för att lämna den som den är"
+
+# DeleteSource()
+_DeleteSource_Title="Bekräfta"
+_DeleteSource_Text="Är du säker på att du vill radera den här raden?"
+
+# EditLabel()
+_EL_Title="Källor"
+
+# BackupChecklist()
+_BC_Title="Kör säkerhetskopia"
+_BC_Extra="Lägg till"
+_BC_Text1="Select which items to backup using this list"
+_BC_Text2="Tryck MELLANSLAG för att välja/avvälja"
+
+# ActionBackup()
+_AB_Title="Information"
+_AB_Text="Kopierar"
+
+# TestDestination()
+_TD_Title="Inte klar"
+_TD_Text1="Destinationssökvägen är inte åtkomlig. Varvänlig kontrollera att den är påslagen."
+_TD_Text2="Försöka igen?"
+
+# Finished
+_Finished_Title="KLAR!"
+_Finished_Text1="Klar, men med fel. Var vänlig kontrollera bacp.error-felfilen."
+_Finished_Text2="Säkerhetskopiering avlutad. Det är alltid klokt att kontrollera resultatet."

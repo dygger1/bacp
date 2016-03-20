@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# bacp backup script
-# --------------------
+# Bacp - a simple backup script
+# -----------------------------
 
 # Simple backup utility.
-# Keeps a small data file of user settings
-# Makes copies of selected data to defined device
-# into a folder it creates named by the current date and time
+# Keeps a small data file of user settings;
+# Makes copies of selected data to defined device;
+# into a folder it creates named by the current date and time.
 
 # This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
 
@@ -26,21 +26,23 @@ declare -a Options    # Used by listgen to display list items
 # -------------------------
 # Opening               35
 # Data file handling    90
-# Operational          464
-# Listgen functions    587
+# Operational          460
+# Listgen functions    583
 
 #
 # Opening - language, main and backout
 #
 SetLanguage() { # User selects language, which is then fixed
-  dialog --clear --backtitle "$_Backtitle" --title " - Language - " --menu "Choose your language" 15 40 7 \
+  dialog --clear --backtitle "$_Backtitle" --title " - Language - " --menu "Choose your language" 18 40 9 \
         "English" "English" \
         "French" "Francais" \
         "Polish" "Polski" \
         "Portuguese" "Português" \
         "Romanian" "Română" \
+        "Russian" "Русский" \
+        "Serbian" "Srpski" \
         "Spanish" "Espanhol" \
-        "Serbian" "Srpski" 2> bacp.output
+        "Swedish" "svensk" 2> bacp.output
     RetVal=$?
     case $RetVal in
       0) # ie: Language selected

@@ -1,4 +1,4 @@
-The bacp project is in active development and is not ready for general use. It is shared here in the spirit of the GNU/Linux community. Although unfinished, the project is stable enough for testing, but do not rely on it for critical backup situations.
+The bacp project is shared here in the spirit of the GNU/Linux community. Although unfinished, the project is stable enough for testing, but do not rely on it for critical backup situations.
 
 Bacp (pronounced "backup") is an "on-demand" backup utility for GNU/Linux environments, suitable for calling from a desktop icon or launcher. It uses the shell "cp" command, hence the 'cp' in the name. It does not compress data, nor does it have a "restore" facility, and there is no scheduling capability. It is just a simple and quick way to back up your data, leaving it up to you to manage your storage devices and to restore files manually as needed. Each backup is saved into a folder named by the current date and time, and you can run Bacp multiple times to ensure that the history of files which change frequently is available.
 
