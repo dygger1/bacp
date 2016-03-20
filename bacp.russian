@@ -1,8 +1,9 @@
 #
 # Russian Translation File
 # ------------------------
-# Written by Anthony Gursky
+# Written by Anthony Gursky anthony.gursky@gmail.com
 # 20 March 2016
+#
 
 # All translation variables begin with an underscore
 # Grouped by each function that contains a dialog
@@ -21,7 +22,7 @@ _Main_Text="Добро пожаловать в Bacp бэкап-утилиту"
 
 # CheckDataFile()
 _CDF_Title="Во-первых"
-_CDF_Text="Похоже, bacp первый раз запускается на этой машине. Перед тем, как вы сможете сделать любой бэкап, вам необходимо задать конечное устройство и по крайней мере один исходное"
+_CDF_Text="Похоже, bacp первый раз запускается на этой машине. Перед тем, как вы сможете сделать любой бэкап, вам необходимо задать конечное устройство и по крайней мере одно исходное"
 
 # DisplaySettings()
 _DS_Title="Настройки"
@@ -98,7 +99,7 @@ _AB_Text="Копируется"
 
 # TestDestination()
 _TD_Title="Не готово"
-_TD_Text1="Заданное устройство выключен. Пожалуйста включите его"
+_TD_Text1="Заданное устройство выключено. Пожалуйста включите его"
 _TD_Text2="Попробовать еще раз?"
 
 # Finished
